@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Loader2, LogOut, Lock, CheckCircle2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { decodeToken } from "@/lib/decodeToken";
+import { getMyPatientProfile, updateMyPatientProfile } from "@/services/patient.service";
 
 const MOCK_PROFILE: PatientProfile = {
   name: "John Doe",
@@ -33,39 +34,35 @@ export default function ProfilePage() {
   const [pwdSuccess, setPwdSuccess] = useState("");
 
   useEffect(() => {
-    // Fetch profile
-    setTimeout(() => {
-      let userEmail = MOCK_PROFILE.email;
-      let userName = MOCK_PROFILE.name;
-      
-      const token = localStorage.getItem("token");
-      if (token) {
-        const decoded = decodeToken(token);
-        if (decoded && decoded.email) {
-          userEmail = decoded.email;
-          // You could extract name from token if it exists, or keep mock
+    const fetchProfile = async () => {
+      try {
+        const p = await getMyPatientProfile();
+        setProfile({
+          ...MOCK_PROFILE,
+          name: p.name,
+          email: p.email,
+          phone: p.phone,
+        });
+      } catch {
+        let userEmail = MOCK_PROFILE.email;
+        const token = localStorage.getItem("token");
+        if (token) {
+          const decoded = decodeToken(token);
+          if (decoded?.email) userEmail = decoded.email;
         }
+        setProfile({ ...MOCK_PROFILE, email: userEmail });
+      } finally {
+        setLoading(false);
       }
-
-      setProfile({
-        ...MOCK_PROFILE,
-        name: userName,
-        email: userEmail,
-      });
-      setLoading(false);
-    }, 600);
+    };
+    fetchProfile();
   }, []);
 
   const handleSaveProfile = async (data: PatientProfile) => {
-    // API Call to save profile
-    return new Promise<void>((resolve) => {
-      setTimeout(() => {
-        setProfile(data);
-        setIsEditing(false);
-        showSuccess("Profile updated successfully");
-        resolve();
-      }, 800);
-    });
+    await updateMyPatientProfile({ name: data.name, phone: data.phone });
+    setProfile(data);
+    setIsEditing(false);
+    showSuccess("Profile updated successfully");
   };
 
   const handleChangePassword = async (e: React.FormEvent) => {
@@ -84,7 +81,6 @@ export default function ProfilePage() {
     }
 
     setPwdLoading(true);
-    // Simulate API
     setTimeout(() => {
       setPwdLoading(false);
       setPasswords({ old: "", new: "", confirm: "" });

@@ -27,6 +27,15 @@ export const deleteAvailabilitySlot = async (id: string): Promise<void> => {
   await api.delete(`/availability/${id}`);
 };
 
+/** PUT /availability/:id — edit a slot */
+export const updateAvailabilitySlot = async (
+  id: string,
+  payload: Partial<CreateAvailabilityPayload>
+): Promise<AvailabilitySlot> => {
+  const { data } = await api.put<AvailabilitySlot>(`/availability/${id}`, payload);
+  return data;
+};
+
 // ── Prescriptions ─────────────────────────────────────────────────────────────
 
 /** POST /prescriptions  — create a prescription */
@@ -62,5 +71,17 @@ export const updatePrescription = async (
 /** GET /doctor/stats  — aggregated numbers for the dashboard */
 export const getDoctorStats = async (): Promise<DoctorStats> => {
   const { data } = await api.get<DoctorStats>("/doctor/stats");
+  return data;
+};
+
+/** GET /doctor/me — current doctor profile (status) */
+export const getDoctorMe = async (): Promise<{ id: string; status: string }> => {
+  const { data } = await api.get<{ id: string; status: string }>("/doctor/me");
+  return data;
+};
+
+/** PATCH /doctor/status — toggle active/inactive */
+export const setDoctorStatus = async (active: boolean): Promise<{ id: string; status: string }> => {
+  const { data } = await api.patch<{ id: string; status: string }>("/doctor/status", { active });
   return data;
 };

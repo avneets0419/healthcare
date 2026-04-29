@@ -3,6 +3,8 @@ import express from "express";
 import cors from "cors";
 import { authRouter } from "./routes/auth.routes";
 import { adminRouter } from "./routes/admin.routes";
+import { doctorRouter } from "./routes/doctor.routes";
+import { patientRouter } from "./routes/patient.routes";
 import { seedDefaultUsers } from "./models/user.model";
 import { prisma } from "./lib/prisma";
 import dashboardRoutes from "./routes/dashboard.routes";
@@ -21,6 +23,8 @@ app.use(express.json());
 
 app.use("/api", authRouter);
 app.use("/api/admin", adminRouter);
+app.use("/api", doctorRouter);
+app.use("/api/patient", patientRouter);
 app.use("/api", dashboardRoutes);
 
 

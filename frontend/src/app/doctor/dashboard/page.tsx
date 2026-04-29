@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getDoctorStats } from "@/services/doctor.service";
+import { getDoctorMe, getDoctorStats, setDoctorStatus } from "@/services/doctor.service";
 import { getDoctorAppointments } from "@/services/appointment.service";
 import { DoctorStats } from "@/types/doctor.types";
 import { Appointment } from "@/types/appointment.types";
@@ -82,15 +82,18 @@ export default function DoctorDashboardPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [isActive, setIsActive] = useState(true);
+  const [statusSaving, setStatusSaving] = useState(false);
 
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [s, appts] = await Promise.all([
+        const [me, s, appts] = await Promise.all([
+          getDoctorMe(),
           getDoctorStats(),
           getDoctorAppointments(),
         ]);
+        setIsActive(me.status === "Active");
         setStats(s);
         setAppointments(appts);
       } catch {
@@ -103,6 +106,22 @@ export default function DoctorDashboardPage() {
     };
     fetchData();
   }, []);
+
+  const handleToggleStatus = async () => {
+    if (statusSaving) return;
+    const next = !isActive;
+    setIsActive(next); // optimistic
+    setStatusSaving(true);
+    try {
+      const result = await setDoctorStatus(next);
+      setIsActive(result.status === "Active");
+    } catch {
+      // rollback
+      setIsActive(!next);
+    } finally {
+      setStatusSaving(false);
+    }
+  };
 
   const todaysAppts = appointments.filter((a) => {
     const apptDate = new Date(a.timeSlot).toDateString();
@@ -135,7 +154,7 @@ export default function DoctorDashboardPage() {
                     <div className="flex items-center gap-3">
                       <div 
                         className={`w-12 h-6 rounded-full p-1 cursor-pointer transition-colors duration-300 ${isActive ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'}`}
-                        onClick={() => setIsActive(!isActive)}
+                        onClick={handleToggleStatus}
                       >
                         <div className={`w-4 h-4 bg-white rounded-full shadow-sm transition-transform duration-300 ${isActive ? 'translate-x-6' : 'translate-x-0'}`} />
                       </div>

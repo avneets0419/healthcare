@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { getDoctorSchedule, addAvailabilitySlot, deleteAvailabilitySlot } from "@/services/doctor.service";
+import { getDoctorSchedule, addAvailabilitySlot, deleteAvailabilitySlot, updateAvailabilitySlot } from "@/services/doctor.service";
 import { AvailabilitySlot } from "@/types/doctor.types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,14 @@ import {
   Loader2,
 } from "lucide-react";
 import AuthGuard from "@/components/shared/AuthGuard";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { X } from "lucide-react";
 
 export default function DoctorAvailabilityPage() {
   const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
@@ -27,7 +35,15 @@ export default function DoctorAvailabilityPage() {
   const [endTime, setEndTime] = useState("");
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [unavailableSlots, setUnavailableSlots] = useState<Set<string>>(new Set());
+
+  const [editState, setEditState] = useState<{
+    open: boolean;
+    slot: AvailabilitySlot | null;
+    date: string;
+    startTime: string;
+    endTime: string;
+    saving: boolean;
+  }>({ open: false, slot: null, date: "", startTime: "", endTime: "", saving: false });
 
   const fetchSlots = useCallback(async () => {
     setLoading(true);
@@ -91,13 +107,54 @@ export default function DoctorAvailabilityPage() {
     }
   };
 
-  const handleMarkUnavailable = (id: string) => {
-    setUnavailableSlots(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
+  const handleMarkUnavailable = async (slot: AvailabilitySlot) => {
+    if (slot.isBooked) return;
+    const current = slot.status ?? "available";
+    const nextStatus = current === "unavailable" ? "available" : "unavailable";
+    try {
+      const updated = await updateAvailabilitySlot(slot.id, { status: nextStatus });
+      setSlots((prev) =>
+        prev
+          .map((s) => (s.id === updated.id ? updated : s))
+          .sort((a, b) => new Date(`${a.date}T${a.startTime}`).getTime() - new Date(`${b.date}T${b.startTime}`).getTime())
+      );
+    } catch (e) {
+      console.error("Failed to toggle availability status", e);
+      alert("Failed to update slot status");
+    }
+  };
+
+  const openEdit = (slot: AvailabilitySlot) => {
+    setEditState({
+      open: true,
+      slot,
+      date: slot.date,
+      startTime: slot.startTime,
+      endTime: slot.endTime,
+      saving: false,
     });
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editState.slot) return;
+    setEditState((s) => ({ ...s, saving: true }));
+    try {
+      const updated = await updateAvailabilitySlot(editState.slot.id, {
+        date: editState.date,
+        startTime: editState.startTime,
+        endTime: editState.endTime,
+      });
+      setSlots((prev) =>
+        prev
+          .map((s) => (s.id === updated.id ? updated : s))
+          .sort((a, b) => new Date(`${a.date}T${a.startTime}`).getTime() - new Date(`${b.date}T${b.startTime}`).getTime())
+      );
+      setEditState({ open: false, slot: null, date: "", startTime: "", endTime: "", saving: false });
+    } catch (e) {
+      console.error("Failed to update slot", e);
+      alert("Failed to update slot");
+      setEditState((s) => ({ ...s, saving: false }));
+    }
   };
 
   return (
@@ -225,7 +282,7 @@ export default function DoctorAvailabilityPage() {
                 {slots.map((slot) => {
                   const slotDate = new Date(slot.date);
                   const isPast = slotDate < new Date(new Date().setHours(0,0,0,0));
-                  const isUnavailable = unavailableSlots.has(slot.id);
+                  const isUnavailable = (slot.status ?? "available") === "unavailable";
                   
                   return (
                     <div 
@@ -286,6 +343,7 @@ export default function DoctorAvailabilityPage() {
                             className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
                             disabled={slot.isBooked || isPast}
                             title="Edit Slot"
+                            onClick={() => openEdit(slot)}
                           >
                             <Edit2 className="h-4 w-4" />
                           </Button>
@@ -295,7 +353,7 @@ export default function DoctorAvailabilityPage() {
                             className="h-8 w-8 text-slate-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/30 rounded-lg transition-colors"
                             disabled={slot.isBooked || isPast}
                             title={isUnavailable ? "Mark Available" : "Mark Unavailable"}
-                            onClick={() => handleMarkUnavailable(slot.id)}
+                            onClick={() => handleMarkUnavailable(slot)}
                           >
                             <Ban className="h-4 w-4" />
                           </Button>
@@ -319,6 +377,69 @@ export default function DoctorAvailabilityPage() {
 
         </div>
       </div>
+      <Dialog
+        open={editState.open}
+        onOpenChange={(open) => !editState.saving && setEditState((s) => ({ ...s, open }))}
+      >
+        <DialogContent
+          showCloseButton={false}
+          className="max-w-lg w-full rounded-[28px] p-0 overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl"
+        >
+          <DialogHeader className="px-8 py-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 flex flex-row items-start justify-between">
+            <div>
+              <DialogTitle className="text-xl font-black text-slate-900 dark:text-white">Edit Slot</DialogTitle>
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-widest">
+                Update date and time range
+              </p>
+            </div>
+            <DialogClose
+              className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition shrink-0"
+              disabled={editState.saving}
+            >
+              <X className="h-5 w-5 text-slate-500" />
+            </DialogClose>
+          </DialogHeader>
+          <div className="p-8 space-y-5">
+            <div className="space-y-1.5">
+              <label className="text-xs font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400">Date</label>
+              <Input
+                type="date"
+                value={editState.date}
+                onChange={(e) => setEditState((s) => ({ ...s, date: e.target.value }))}
+                className="h-11 rounded-2xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400">Start</label>
+                <Input
+                  type="time"
+                  value={editState.startTime}
+                  onChange={(e) => setEditState((s) => ({ ...s, startTime: e.target.value }))}
+                  className="h-11 rounded-2xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400">End</label>
+                <Input
+                  type="time"
+                  value={editState.endTime}
+                  onChange={(e) => setEditState((s) => ({ ...s, endTime: e.target.value }))}
+                  className="h-11 rounded-2xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900"
+                />
+              </div>
+            </div>
+
+            <Button
+              onClick={handleSaveEdit}
+              disabled={editState.saving || !editState.date || !editState.startTime || !editState.endTime}
+              className="w-full h-11 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black tracking-widest uppercase"
+            >
+              {editState.saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save Changes"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AuthGuard>
   );
 }

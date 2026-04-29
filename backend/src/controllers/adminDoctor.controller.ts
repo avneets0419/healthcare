@@ -1,5 +1,8 @@
 import { Request, Response } from "express";
 import { getDoctors, addDoctor, updateDoctorDetails, removeDoctor } from "../models/doctor.model";
+import bcrypt from "bcryptjs";
+import { upsertUserByEmail } from "../models/user.model";
+import { prisma } from "../lib/prisma";
 
 export const getAllDoctors = async (req: Request, res: Response) => {
   try {
@@ -14,20 +17,30 @@ export const getAllDoctors = async (req: Request, res: Response) => {
 
 export const createDoctor = async (req: Request, res: Response) => {
   try {
-    const { name, specialization, email, phone, experience } = req.body;
+    const { name, specialization, email, phone, experience, password } = req.body;
 
-    if (!name || !specialization || !email) {
-      res.status(400).json({ message: "name, specialization, and email are required" });
+    if (!name || !specialization || !email || !password) {
+      res.status(400).json({ message: "name, specialization, email, and password are required" });
       return;
     }
+
+    const passwordHash = await bcrypt.hash(String(password), 10);
 
     const newDoctor = await addDoctor({
       name,
       specialization,
       email,
+      passwordHash,
       phone: phone || "+1 (000) 000-0000",
       experience: experience || "0 years",
     });
+
+    await upsertUserByEmail(email, {
+      name,
+      passwordHash,
+      role: "doctor",
+    });
+
     res.status(201).json(newDoctor);
   } catch (error: unknown) {
     const isPrismaUniqueViolation =
@@ -42,7 +55,46 @@ export const createDoctor = async (req: Request, res: Response) => {
 
 export const updateDoctor = async (req: Request, res: Response) => {
   try {
-    const updated = await updateDoctorDetails(req.params.id, req.body);
+    const { password, ...rest } = req.body || {};
+
+    const existing = (await (prisma.doctor as any).findUnique({
+      where: { id: req.params.id },
+      select: { email: true, name: true, passwordHash: true },
+    })) as { email: string; name: string; passwordHash?: string | null } | null;
+    if (!existing) {
+      res.status(404).json({ message: "Doctor not found" });
+      return;
+    }
+
+    let passwordHash: string | undefined;
+    if (password) {
+      passwordHash = await bcrypt.hash(String(password), 10);
+    }
+
+    const updated = await updateDoctorDetails(req.params.id, {
+      ...rest,
+      ...(passwordHash ? { passwordHash } : {}),
+    });
+
+    const emailChanged = Boolean(rest?.email && rest.email !== existing.email);
+    if (passwordHash) {
+      await upsertUserByEmail(updated.email, {
+        name: updated.name,
+        passwordHash,
+        role: "doctor",
+      });
+    } else if (emailChanged) {
+      if (!existing.passwordHash) {
+        res.status(409).json({ message: "Cannot change email before setting a doctor password." });
+        return;
+      }
+      await upsertUserByEmail(updated.email, {
+        name: updated.name,
+        passwordHash: existing.passwordHash,
+        role: "doctor",
+      });
+    }
+
     res.status(200).json(updated);
   } catch (error: unknown) {
     const isNotFound =

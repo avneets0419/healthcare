@@ -25,6 +25,22 @@ export const seedDefaultUsers = async () => {
     },
   });
 
+  // Ensure the seeded doctor login has a matching Doctor profile (doctor endpoints resolve by email).
+  await prisma.doctor.upsert({
+    where: { email: "doctor@test.com" },
+    update: {
+      status: "Active",
+    },
+    create: {
+      name: "Dr. Default Doctor",
+      specialization: "General",
+      email: "doctor@test.com",
+      phone: "+1 (000) 000-0000",
+      experience: "0 years",
+      status: "Active",
+    },
+  });
+
   console.log("Default users seeded");
 };
 
@@ -37,3 +53,19 @@ export const createUser = (data: {
   passwordHash: string;
   role?: string;
 }) => prisma.user.create({ data });
+
+export const upsertUserByEmail = (email: string, data: { name: string; passwordHash: string; role: string }) =>
+  prisma.user.upsert({
+    where: { email },
+    update: {
+      name: data.name,
+      passwordHash: data.passwordHash,
+      role: data.role,
+    },
+    create: {
+      name: data.name,
+      email,
+      passwordHash: data.passwordHash,
+      role: data.role,
+    },
+  });

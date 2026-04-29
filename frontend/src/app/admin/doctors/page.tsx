@@ -41,7 +41,7 @@ export default function AdminDoctorsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingDoc, setEditingDoc] = useState<Doctor | null>(null)
 
-  const [formData, setFormData] = useState({ name: '', email: '', phone: '', specialization: '', experience: '' })
+  const [formData, setFormData] = useState({ name: '', email: '', phone: '', specialization: '', experience: '', password: '' })
 
   const fetchDoctors = async () => {
     setLoading(true);
@@ -88,13 +88,13 @@ export default function AdminDoctorsPage() {
 
   const openNewModal = () => {
     setEditingDoc(null);
-    setFormData({ name: '', email: '', phone: '', specialization: '', experience: '' });
+    setFormData({ name: '', email: '', phone: '', specialization: '', experience: '', password: '' });
     setIsModalOpen(true);
   }
 
   const openEditModal = (doc: Doctor) => {
     setEditingDoc(doc);
-    setFormData({ name: doc.name, email: doc.email, phone: doc.phone || '', specialization: doc.specialization, experience: doc.experience || '' });
+    setFormData({ name: doc.name, email: doc.email, phone: doc.phone || '', specialization: doc.specialization, experience: doc.experience || '', password: '' });
     setIsModalOpen(true);
   }
 
@@ -103,15 +103,23 @@ export default function AdminDoctorsPage() {
 
     try {
       const token = localStorage.getItem("token");
+      const payload = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        specialization: formData.specialization,
+        experience: formData.experience,
+        ...(formData.password ? { password: formData.password } : {}),
+      };
       if (editingDoc) {
 
-        await api.put(`/admin/doctors/${editingDoc.id}`, formData, {
+        await api.put(`/admin/doctors/${editingDoc.id}`, payload, {
           headers: {
             Authorization: `Bearer ${token}`, // ✅ added
           },
         });
       } else {
-        await api.post(`/admin/doctors`, formData, {
+        await api.post(`/admin/doctors`, payload, {
           headers: {
             Authorization: `Bearer ${token}`, // ✅ added
           },
@@ -294,6 +302,19 @@ export default function AdminDoctorsPage() {
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Email Address</label>
                   <Input required type="email" placeholder="doctor@mediso.com" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="bg-slate-50 dark:bg-slate-900" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                    {editingDoc ? "Reset Password (optional)" : "Password"}
+                  </label>
+                  <Input
+                    required={!editingDoc}
+                    type="password"
+                    placeholder={editingDoc ? "Leave blank to keep unchanged" : "Set doctor login password"}
+                    value={formData.password}
+                    onChange={e => setFormData({ ...formData, password: e.target.value })}
+                    className="bg-slate-50 dark:bg-slate-900"
+                  />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
