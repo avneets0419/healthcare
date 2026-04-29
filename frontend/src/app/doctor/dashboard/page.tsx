@@ -198,35 +198,38 @@ export default function DoctorDashboardPage() {
         {/* 3. KPI Cards Grid */}
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
           
-          {/* Card 1: Today's Appointments */}
-          <div className="relative overflow-hidden bg-gradient-to-br from-teal-600 via-emerald-600 to-slate-900 dark:from-teal-800 dark:to-slate-950 p-8 rounded-3xl flex flex-col justify-between text-white shadow-2xl shadow-emerald-600/20 transition-all hover:shadow-emerald-600/30 hover:-translate-y-1 duration-500 group border border-emerald-500/50">
-            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay pointer-events-none" />
-            <div className="absolute -right-4 -bottom-12 opacity-5 mix-blend-overlay group-hover:scale-110 group-hover:-rotate-6 transition-all duration-1000 pointer-events-none">
-              <CalendarDays className="w-80 h-80" strokeWidth={3} />
-            </div>
+          {/* Card 1: Today's Appointments (UPDATED UI) */}
+<div className="bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-800/80 p-8 rounded-3xl border border-slate-200/60 dark:border-slate-700/50 shadow-lg shadow-slate-200/40 dark:shadow-black/20 transition-all hover:-translate-y-1 hover:shadow-xl duration-500 flex flex-col justify-between group relative overflow-hidden">
+  
+  <div className="absolute -right-8 -top-8 w-32 h-32 bg-teal-400/10 rounded-full blur-3xl group-hover:bg-teal-400/20 transition-colors pointer-events-none" />
 
-            <div className="relative z-10 flex items-center justify-between mb-12">
-              <h3 className="font-bold text-teal-50 text-lg flex items-center gap-3 tracking-tight">
-                <span className="p-2.5 bg-white/10 rounded-2xl backdrop-blur-md border border-white/10 shadow-inner">
-                  <Clock className="h-5 w-5 text-teal-100" />
-                </span>
-                Today&apos;s Appointments
-              </h3>
-              <span className="bg-white/10 text-white text-[10px] font-extrabold uppercase tracking-widest px-3 py-1.5 rounded-full backdrop-blur-md shadow-inner border border-white/20 flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" /> Live
-              </span>
-            </div>
+  <div className="flex items-start justify-between mb-8 relative z-10">
+    <div className="relative">
+      <div className="absolute inset-0 bg-teal-400/20 blur-md rounded-2xl scale-110 opacity-0 group-hover:opacity-100 transition-opacity" />
+      <div className="relative w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center group-hover:rotate-3 transition-transform duration-300 shadow-sm border border-teal-100/50 dark:border-teal-800/30">
+        <Clock className="h-5 w-5 text-teal-600 dark:text-teal-400" />
+      </div>
+    </div>
 
-            <div className="relative z-10 flex flex-col items-center justify-center w-full">
-              <p className="text-6xl font-black mb-3 tracking-tighter drop-shadow-xl text-transparent bg-clip-text bg-gradient-to-br from-white to-teal-100">
-                {stats?.todayAppointments ?? 0}
-              </p>
-              <div className="flex items-center text-[10px] font-bold text-teal-50 bg-black/20 w-max px-3 py-1.5 rounded-full backdrop-blur-md border border-white/10 shadow-sm uppercase tracking-widest">
-                <TrendingUp className="h-3 w-3 mr-1.5 text-teal-400" />
-                <span>+2 from yesterday</span>
-              </div>
-            </div>
-          </div>
+    <span className="text-[10px] font-black uppercase tracking-widest text-teal-600 bg-teal-50 px-2.5 py-1 rounded-md">
+      Live
+    </span>
+  </div>
+
+  <div className="relative z-10 flex flex-col items-center w-full mt-2">
+    <h3 className="font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[10px] mb-2 text-center">
+      Today&apos;s Appointments
+    </h3>
+
+    <p className="text-5xl font-black text-slate-900 dark:text-white tracking-tight mb-2">
+      {stats?.todayAppointments ?? 0}
+    </p>
+
+    <span className="text-[10px] font-bold text-teal-600 bg-teal-50 px-2.5 py-1 rounded-md uppercase tracking-widest">
+      +2 from yesterday
+    </span>
+  </div>
+</div>
 
           {/* Card 2: Completed Appointments */}
           <div className="bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-800/80 p-8 rounded-3xl border border-slate-200/60 dark:border-slate-700/50 shadow-lg shadow-slate-200/40 dark:shadow-black/20 transition-all hover:-translate-y-1 hover:shadow-xl duration-500 flex flex-col justify-between group relative overflow-hidden">
