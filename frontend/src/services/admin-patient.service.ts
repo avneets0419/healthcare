@@ -5,13 +5,15 @@ export const patientService = {
     getPatients: async (
         search: string = "",
         status: string = "",
-        condition: string = ""
+        condition: string = "",
+        department: string = ""
     ): Promise<Patient[]> => {
         const params = new URLSearchParams();
 
         if (search) params.append("search", search);
         if (status) params.append("status", status);
         if (condition) params.append("condition", condition);
+        if (department) params.append("department", department);
 
         const { data } = await api.get<Patient[]>(
             `/admin/patients?${params.toString()}`

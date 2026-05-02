@@ -1,65 +1,14 @@
 "use client"
 
-import { useState } from "react"
-import { Plus, Search, Filter, HeartPulse, Activity, UserCheck, Stethoscope, Eye, Edit, ArrowRightFromLine } from "lucide-react"
+import { useState, useEffect } from "react"
+import { Plus, Search, Filter, HeartPulse, Activity, UserCheck, Stethoscope, Eye, Edit, ArrowRightFromLine, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { StatCard } from "@/components/shared/StatCard"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-
-// Mock data for patients
-const patients = [
-  {
-    id: "PAT001",
-    name: "Sarah Johnson",
-    age: 35,
-    gender: "Female",
-    lastVisit: "Jan 06, 2024",
-    status: "Active",
-    diagnosis: "General Medicine",
-    image: "/avatars/patient-1.png",
-  },
-  {
-    id: "PAT002",
-    name: "Jude Billingham",
-    age: 27,
-    gender: "Male",
-    lastVisit: "Jan 09, 2024",
-    status: "Active",
-    diagnosis: "Cardiology",
-    image: "/avatars/patient-2.png",
-  },
-  {
-    id: "PAT003",
-    name: "Leslie Alexander",
-    age: 45,
-    gender: "Female",
-    lastVisit: "Jan 11, 2024",
-    status: "Active",
-    diagnosis: "Gastroenterology",
-    image: "/avatars/patient-3.png",
-  },
-  {
-    id: "PAT004",
-    name: "John Doe",
-    age: 52,
-    gender: "Male",
-    lastVisit: "Jan 15, 2024",
-    status: "Recovered",
-    diagnosis: "Orthopedics",
-    image: "/avatars/patient-4.png",
-  },
-  {
-    id: "PAT005",
-    name: "Emma Wilson",
-    age: 29,
-    gender: "Female",
-    lastVisit: "Jan 18, 2024",
-    status: "Under Treatment",
-    diagnosis: "Dermatology",
-    image: "/avatars/patient-5.png",
-  },
-]
+import { RegisterPatientModal } from "@/components/admin/RegisterPatientModal"
+import { patientService } from "@/services/admin-patient.service"
+import { Patient } from "@/types/patient.types"
 
 // Helps map a string to a predictable teal/emerald tint for avatars
 const getAvatarStyle = (name: string) => {
@@ -74,11 +23,31 @@ const getAvatarStyle = (name: string) => {
 
 export default function AdminPatientsPage() {
   const [searchQuery, setSearchQuery] = useState("")
+  const [patients, setPatients] = useState<Patient[]>([])
+  const [loading, setLoading] = useState(true)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [filterStatus, setFilterStatus] = useState("")
+  const [filterCondition, setFilterCondition] = useState("")
+  const [filterDepartment, setFilterDepartment] = useState("")
 
-  const filteredPatients = patients.filter((patient) =>
-    patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    patient.id.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const fetchPatients = async () => {
+    setLoading(true)
+    try {
+      const data = await patientService.getPatients(searchQuery, filterStatus, filterCondition, filterDepartment)
+      setPatients(data)
+    } catch (error) {
+      console.error("Failed to fetch patients:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchPatients()
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [searchQuery, filterStatus, filterCondition, filterDepartment])
 
   return (
     <div className="space-y-10 animate-in fade-in zoom-in-95 duration-700">
@@ -92,7 +61,10 @@ export default function AdminPatientsPage() {
             Monitor admissions, track treatment progress, and manage patient records.
           </p>
         </div>
-        <Button className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20 hover:-translate-y-0.5 transition-all text-sm px-5 py-2.5 h-auto">
+        <Button 
+          onClick={() => setIsModalOpen(true)}
+          className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20 hover:-translate-y-0.5 transition-all text-sm px-5 py-2.5 h-auto"
+        >
           <Plus className="mr-2 h-4 w-4" /> Register Patient
         </Button>
       </div>
@@ -107,7 +79,7 @@ export default function AdminPatientsPage() {
         />
         <StatCard
           title="Active Cases"
-          value={patients.filter(p => p.status === "Active").length}
+          value={patients.filter(p => p.status?.toLowerCase() === "active").length}
           icon={Activity}
           trend="up"
           trendValue="Healthy stable"
@@ -115,7 +87,7 @@ export default function AdminPatientsPage() {
         />
         <StatCard
           title="Under Treatment"
-          value={patients.filter(p => p.status === "Under Treatment").length}
+          value={patients.filter(p => p.status?.toLowerCase() === "under_treatment").length}
           icon={Stethoscope}
           color="amber"
           trend="neutral"
@@ -123,7 +95,7 @@ export default function AdminPatientsPage() {
         />
         <StatCard
           title="Recovered"
-          value={patients.filter(p => p.status === "Recovered").length}
+          value={patients.filter(p => p.status?.toLowerCase() === "recovered").length}
           icon={HeartPulse}
           color="teal"
           trend="up"
@@ -147,16 +119,31 @@ export default function AdminPatientsPage() {
           </div>
           
           <div className="flex items-center gap-3 w-full sm:w-auto">
-            <select className="h-11 px-4 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-emerald-500/30 focus:border-emerald-500 outline-none cursor-pointer w-full sm:w-auto shadow-sm text-slate-600 dark:text-slate-300">
+            <select 
+              className="h-11 px-4 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-emerald-500/30 focus:border-emerald-500 outline-none cursor-pointer w-full sm:w-auto shadow-sm text-slate-600 dark:text-slate-300"
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+            >
               <option value="">Status: All</option>
               <option value="active">Active</option>
-              <option value="treatment">Under Treatment</option>
+              <option value="under_treatment">Under Treatment</option>
               <option value="recovered">Recovered</option>
+              <option value="inactive">Inactive</option>
             </select>
-             <select className="h-11 px-4 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-emerald-500/30 focus:border-emerald-500 outline-none cursor-pointer w-full sm:w-auto shadow-sm text-slate-600 dark:text-slate-300 hidden md:block">
-              <option value="">Condition: All</option>
-              <option value="cardiology">Cardiology</option>
-              <option value="orthopedics">Orthopedics</option>
+             <select 
+              className="h-11 px-4 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-emerald-500/30 focus:border-emerald-500 outline-none cursor-pointer w-full sm:w-auto shadow-sm text-slate-600 dark:text-slate-300 hidden md:block"
+              value={filterDepartment}
+              onChange={(e) => setFilterDepartment(e.target.value)}
+            >
+              <option value="">Dept: All</option>
+              <option value="Cardiology">Cardiology</option>
+              <option value="Orthopedics">Orthopedics</option>
+              <option value="Neurology">Neurology</option>
+              <option value="Gastroenterology">Gastroenterology</option>
+              <option value="Dermatology">Dermatology</option>
+              <option value="Pediatrics">Pediatrics</option>
+              <option value="Oncology">Oncology</option>
+              <option value="General Medicine">General Medicine</option>
             </select>
             <Button variant="outline" className="h-11 px-5 rounded-xl border-slate-200 hover:bg-slate-50 dark:border-slate-700 shadow-sm whitespace-nowrap">
               <Filter className="mr-2 h-4 w-4 text-slate-500" /> Filter
@@ -175,12 +162,17 @@ export default function AdminPatientsPage() {
             <div className="col-span-2 text-right pr-4">Actions</div>
           </div>
 
-          {filteredPatients.length === 0 ? (
+          {loading ? (
+            <div className="flex flex-col items-center justify-center p-20 bg-white dark:bg-slate-800/50 rounded-3xl border border-dashed border-slate-200 dark:border-slate-700">
+              <Loader2 className="h-8 w-8 text-emerald-500 animate-spin mb-4" />
+              <p className="text-slate-400 font-medium">Fetching patient records...</p>
+            </div>
+          ) : patients.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-16 bg-white dark:bg-slate-800/50 rounded-3xl border border-dashed border-slate-200 dark:border-slate-700">
               <p className="text-slate-400 font-medium">No patients found within these filter bounds.</p>
             </div>
           ) : (
-            filteredPatients.map((patient) => (
+            patients.map((patient) => (
               <div 
                 key={patient.id} 
                 className="group flex flex-col lg:grid lg:grid-cols-12 gap-4 items-center bg-white dark:bg-slate-800/80 p-4 lg:px-6 rounded-2xl border border-slate-100 dark:border-slate-700/50 shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:border-emerald-100 dark:hover:border-emerald-900/30 transition-all duration-300"
@@ -188,7 +180,6 @@ export default function AdminPatientsPage() {
                 {/* Profile */}
                 <div className="col-span-4 w-full flex items-center gap-4">
                   <Avatar className="h-12 w-12 border-2 border-white dark:border-slate-800 shadow-sm bg-white">
-                    <AvatarImage src={patient.image} alt={patient.name} />
                     <AvatarFallback className={`font-bold ${getAvatarStyle(patient.name)}`}>
                       {patient.name.split(" ").map(n => n[0]).join("").substring(0,2)}
                     </AvatarFallback>
@@ -198,40 +189,42 @@ export default function AdminPatientsPage() {
                       {patient.name}
                     </h4>
                     <div className="flex items-center gap-3 mt-1 text-xs font-medium text-slate-400">
-                      <span>#{patient.id}</span>
+                      <span>#{patient.patientId || "N/A"}</span>
                       <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
-                      <span>{patient.age} yrs</span>
+                      <span>{patient.age || "?"} yrs</span>
                       <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
-                      <span>{patient.gender}</span>
+                      <span>{patient.gender || "Not specified"}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Admission Date */}
                 <div className="col-span-2 w-full lg:w-auto text-sm text-slate-500 dark:text-slate-400 font-medium tracking-tight">
-                  {patient.lastVisit}
+                  {new Date(patient.createdAt).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })}
                 </div>
 
                 {/* Condition / Diagnosis */}
                 <div className="col-span-2 w-full lg:w-auto">
                   <span className="inline-flex items-center px-2.5 py-1 rounded-lg border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 text-xs font-semibold whitespace-nowrap shadow-sm">
-                    {patient.diagnosis}
+                    {patient.condition || "General"}
                   </span>
                 </div>
 
                 {/* Status */}
                 <div className="col-span-2 w-full lg:w-auto">
                   <span className={`inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold tracking-wide uppercase shadow-sm ${
-                    patient.status === "Active" 
+                    patient.status?.toLowerCase() === "active" 
                       ? "bg-emerald-100/80 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50" 
-                      : patient.status === "Recovered"
+                      : patient.status?.toLowerCase() === "recovered"
                       ? "bg-teal-50 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400 border border-teal-200 dark:border-teal-800/50"
-                      : "bg-amber-100/80 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50"
+                      : patient.status?.toLowerCase() === "under_treatment"
+                      ? "bg-amber-100/80 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50"
+                      : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700"
                   }`}>
-                    {patient.status === "Active" && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2 animate-pulse" />}
-                    {patient.status === "Under Treatment" && <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-2" />}
-                    {patient.status === "Recovered" && <span className="w-1.5 h-1.5 rounded-full bg-teal-500 mr-2" />}
-                    {patient.status}
+                    {patient.status?.toLowerCase() === "active" && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2 animate-pulse" />}
+                    {patient.status?.toLowerCase() === "under_treatment" && <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-2" />}
+                    {patient.status?.toLowerCase() === "recovered" && <span className="w-1.5 h-1.5 rounded-full bg-teal-500 mr-2" />}
+                    {patient.status?.replace("_", " ")}
                   </span>
                 </div>
 
@@ -252,6 +245,12 @@ export default function AdminPatientsPage() {
           )}
         </div>
       </div>
+
+      <RegisterPatientModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={fetchPatients}
+      />
     </div>
   )
 }
