@@ -1,73 +1,15 @@
 "use client"
 
-import { useState } from "react"
-import { Search, Filter, Calendar as CalendarIcon, Clock, User, CheckCircle2, XCircle, CalendarClock, AlertTriangle, ArrowRight, Activity, CalendarCheck, CheckCircle } from "lucide-react"
+import { useState, useEffect } from "react"
+import { Search, Filter, Calendar as CalendarIcon, Clock, User, CheckCircle2, XCircle, CalendarClock, AlertTriangle, ArrowRight, Activity, CalendarCheck, CheckCircle, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { StatCard } from "@/components/shared/StatCard"
-
-
-const appointments = [
-  {
-    id: "APP001",
-    patientName: "Sarah Johnson",
-    doctorName: "Dr. Emily Taylor",
-    dateGroup: "Today",
-    time: "10:00 AM",
-    status: "Scheduled",
-    type: "General Checkup",
-    doctorStatus: "Available",
-    doctorWorkload: "4 appts today",
-    isLive: true,
-  },
-  {
-    id: "APP002",
-    patientName: "Jude Billingham",
-    doctorName: "Dr. Michael Chen",
-    dateGroup: "Today",
-    time: "11:30 AM",
-    status: "Completed",
-    type: "Cardiology",
-    doctorStatus: "Available",
-    doctorWorkload: "5 appts today",
-  },
-  {
-    id: "APP005",
-    patientName: "Emma Wilson",
-    doctorName: "Dr. Lisa Wang",
-    dateGroup: "Today",
-    time: "04:30 PM",
-    status: "Pending",
-    type: "Dermatology",
-    doctorStatus: "Conflict",
-    conflictReason: "Overlapping Surgery (4:00 PM)",
-    doctorWorkload: "Fully booked",
-  },
-  {
-    id: "APP003",
-    patientName: "Leslie Alexander",
-    doctorName: "Dr. Emily Taylor",
-    dateGroup: "Tomorrow",
-    time: "09:00 AM",
-    status: "Cancelled",
-    type: "Pediatrics",
-    doctorStatus: "Available",
-    doctorWorkload: "3 appts tomorrow",
-  },
-  {
-    id: "APP004",
-    patientName: "John Doe",
-    doctorName: "Dr. James Wilson",
-    dateGroup: "Upcoming",
-    dateStr: "Jan 25, 2024",
-    time: "02:00 PM",
-    status: "Scheduled",
-    type: "Orthopedics",
-    doctorStatus: "Available",
-    doctorWorkload: "1 appt",
-  },
-];
+import { BookAppointmentModal } from "@/components/admin/BookAppointmentModal"
+import { adminAppointmentService } from "@/services/admin-appointment.service"
+import { Appointment } from "@/types/appointment.types"
+import { toast } from "sonner"
 
 const getPatientAvatarTint = (name: string) => {
   const styles = [
@@ -81,19 +23,86 @@ const getPatientAvatarTint = (name: string) => {
 export default function AdminAppointmentsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [activeFilter, setActiveFilter] = useState("All")
+  const [appointments, setAppointments] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
-  let filtered = appointments.filter((apt) =>
-    apt.patientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    apt.doctorName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    apt.id.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const fetchAppointments = async () => {
+    setLoading(true)
+    try {
+      const data = await adminAppointmentService.getAllAppointments(searchQuery)
+
+      // Process data to match the UI groups
+      const now = new Date()
+      const today = now.toISOString().split('T')[0]
+      const tomorrow = new Date(now)
+      tomorrow.setDate(now.getDate() + 1)
+      const tomorrowStr = tomorrow.toISOString().split('T')[0]
+
+      const processed = data.map((apt: any) => {
+        const aptDate = new Date(apt.time)
+        const aptDateStr = aptDate.toISOString().split('T')[0]
+
+        let dateGroup = "Upcoming"
+        if (aptDateStr === today) dateGroup = "Today"
+        else if (aptDateStr === tomorrowStr) dateGroup = "Tomorrow"
+
+        return {
+          ...apt,
+          dateGroup,
+          time: aptDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          dateStr: aptDate.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+          doctorName: apt.doctor?.name || "Unassigned",
+          doctorWorkload: "Real-time sync",
+          isLive: aptDateStr === today && Math.abs(aptDate.getTime() - now.getTime()) < 3600000 // Within 1 hour
+        }
+      })
+
+      setAppointments(processed)
+    } catch (error) {
+      console.error("Failed to fetch appointments:", error)
+      toast.error("Failed to load appointments")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchAppointments()
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [searchQuery, activeFilter])
+
+  const handleStatusUpdate = async (id: string, status: string) => {
+    try {
+      await adminAppointmentService.updateStatus(id, status)
+      toast.success(`Appointment ${status.toLowerCase()}`)
+      fetchAppointments()
+    } catch (error) {
+      toast.error("Failed to update status")
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to cancel this appointment?")) return
+    try {
+      await adminAppointmentService.deleteAppointment(id)
+      toast.success("Appointment cancelled")
+      fetchAppointments()
+    } catch (error) {
+      toast.error("Failed to cancel appointment")
+    }
+  }
+
+  let filtered = appointments;
 
   if (activeFilter === "Today") {
     filtered = filtered.filter(a => a.dateGroup === "Today");
   } else if (activeFilter === "Upcoming") {
     filtered = filtered.filter(a => a.dateGroup === "Tomorrow" || a.dateGroup === "Upcoming");
   } else if (activeFilter === "Conflicts") {
-    filtered = filtered.filter(a => a.doctorStatus === "Conflict");
+    filtered = filtered.filter(a => a.status === "Conflict"); // Note: Conflict status needs backend support
   }
 
   const grouped = filtered.reduce((acc, apt) => {
@@ -115,52 +124,12 @@ export default function AdminAppointmentsPage() {
             Manage time slots, resolve scheduling conflicts, and oversee daily workflows.
           </p>
         </div>
-        <Button className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20 hover:-translate-y-0.5 transition-all text-sm px-5 py-2.5 h-auto">
+        <Button
+          onClick={() => setIsModalOpen(true)}
+          className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20 hover:-translate-y-0.5 transition-all text-sm px-5 py-2.5 h-auto"
+        >
           <CalendarIcon className="mr-2 h-4 w-4" /> Book Appointment
         </Button>
-      </div>
-
-      {/* 2. Top Priorities & Workflow Insights */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <StatCard
-          title="Upcoming Today"
-          value={appointments.filter(a => a.dateGroup === "Today" && a.status === "Scheduled").length}
-          icon={CalendarCheck}
-          color="teal"
-          trend="neutral"
-          trendValue="On schedule"
-        />
-        <StatCard
-          title="Action Needed"
-          value={appointments.filter(a => a.doctorStatus === "Conflict" || a.status === "Pending").length}
-          icon={AlertTriangle}
-          color="amber"
-          trend="down"
-          trendValue="Requires attention"
-        />
-        <StatCard
-          title="Completed"
-          value={appointments.filter(a => a.status === "Completed").length}
-          icon={CheckCircle}
-          color="teal"
-          trend="up"
-          trendValue="Smooth operations"
-        />
-
-        {/* Harmonized Soft Green "Next Available Slot" Card instead of Dark Blue */}
-        <div className="bg-gradient-to-br from-emerald-50 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/20 p-5 rounded-[20px] border border-emerald-200/60 dark:border-emerald-800/50 shadow-sm flex flex-col justify-between transition-all hover:shadow-md hover:-translate-y-1">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-semibold text-teal-800 dark:text-teal-400">Next Available Slot</p>
-            <Clock className="w-4 h-4 text-teal-600 dark:text-teal-500" />
-          </div>
-          <div className="mt-2">
-            <p className="text-3xl font-extrabold text-teal-900 dark:text-teal-100 tracking-tight">12:30 PM</p>
-            <p className="text-xs font-medium text-teal-700 dark:text-teal-500 mt-1">Dr. Smith - Gen. Checkup</p>
-          </div>
-          <Button variant="secondary" size="sm" className="mt-4 bg-white/70 hover:bg-white text-teal-800 border-0 shadow-sm transition-colors text-xs font-bold uppercase tracking-wider">
-            Fill Slot <ArrowRight className="ml-2 h-3.5 w-3.5" />
-          </Button>
-        </div>
       </div>
 
       {/* 3. Advanced Filtering & Control Bar */}
@@ -169,15 +138,15 @@ export default function AdminAppointmentsPage() {
         {/* Quick Filters Row */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
           <span className="text-xs font-semibold uppercase tracking-widest text-slate-400 mr-2 shrink-0">Views</span>
-          {["All", "Today", "Upcoming", "Conflicts"].map(filter => (
+          {["All", "Today", "Upcoming"].map(filter => (
             <Button
               key={filter}
               variant={activeFilter === filter ? "default" : "outline"}
               size="sm"
               onClick={() => setActiveFilter(filter)}
               className={`rounded-full h-8 px-4 text-xs font-semibold transition-all ${activeFilter === filter
-                  ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border-none shadow-sm dark:bg-emerald-900/60 dark:text-emerald-300"
-                  : "border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800"
+                ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border-none shadow-sm dark:bg-emerald-900/60 dark:text-emerald-300"
+                : "border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800"
                 }`}
             >
               {filter} {filter === "Conflicts" && <span className="ml-1.5 w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />}
@@ -217,7 +186,16 @@ export default function AdminAppointmentsPage() {
 
       {/* 4. Time-Based Grouped Layout (The Core Redesign) */}
       <div className="space-y-10">
-        {["Today", "Tomorrow", "Upcoming"].map((groupName) => {
+        {loading ? (
+          <div className="flex flex-col items-center justify-center p-20 bg-white dark:bg-slate-800/50 rounded-3xl border border-dashed border-slate-200 dark:border-slate-700">
+            <Loader2 className="h-10 w-10 text-emerald-500 animate-spin mb-4" />
+            <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Syncing Schedule...</p>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="flex flex-col items-center justify-center p-16 bg-white dark:bg-slate-800/50 rounded-3xl border border-dashed border-slate-200 dark:border-slate-700">
+            <p className="text-slate-400 font-medium">No appointments found for this selection.</p>
+          </div>
+        ) : ["Today", "Tomorrow", "Upcoming"].map((groupName) => {
           const groupAppointments = grouped[groupName];
           if (!groupAppointments || groupAppointments.length === 0) return null;
 
@@ -239,7 +217,7 @@ export default function AdminAppointmentsPage() {
               <div className="grid gap-4">
                 {groupAppointments.map((apt) => {
                   const isCompleted = apt.status === "Completed";
-                  const isConflict = apt.doctorStatus === "Conflict";
+                  const isConflict = apt.status === "Conflict";
                   const isLive = apt.isLive;
 
                   return (
@@ -297,7 +275,7 @@ export default function AdminAppointmentsPage() {
                           <div className="min-w-0">
                             <h4 className="font-semibold text-slate-700 dark:text-slate-300 text-sm truncate">{apt.doctorName}</h4>
                             {isConflict ? (
-                              <p className="text-[11px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest mt-1 flex items-center gap-1.5 animate-pulse"><AlertTriangle className="h-3.5 w-3.5" /> {apt.conflictReason}</p>
+                              <p className="text-[11px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest mt-1 flex items-center gap-1.5 animate-pulse"><AlertTriangle className="h-3.5 w-3.5" /> Conflict Reason</p>
                             ) : (
                               <div className="flex items-center gap-2 mt-1">
                                 <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">Available</p>
@@ -312,9 +290,9 @@ export default function AdminAppointmentsPage() {
                       {/* Status Badge */}
                       <div className="w-32 shrink-0 relative z-10 flex lg:justify-center">
                         <span className={`inline-flex items-center justify-center w-full max-w-[120px] px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-widest uppercase shadow-sm border transition-colors ${apt.status === "Scheduled" ? "bg-teal-50 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400 border-teal-200 dark:border-teal-800/50" :
-                            apt.status === "Completed" ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/50" :
-                              apt.status === "Pending" ? "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 border-amber-300 dark:border-amber-700/60" :
-                                "bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 border-rose-200 dark:border-rose-800/50" // Cancelled
+                          apt.status === "Completed" ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/50" :
+                            apt.status === "Pending" ? "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 border-amber-300 dark:border-amber-700/60" :
+                              "bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 border-rose-200 dark:border-rose-800/50" // Cancelled
                           }`}>
                           {apt.status}
                         </span>
@@ -325,7 +303,11 @@ export default function AdminAppointmentsPage() {
                         {apt.status !== "Completed" && apt.status !== "Cancelled" && (
                           <>
                             {/* Primary Action Button */}
-                            <Button size="sm" className="h-9 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-500/20 active:scale-95 transition-all">
+                            <Button
+                              size="sm"
+                              onClick={() => handleStatusUpdate(apt.id, "Completed")}
+                              className="h-9 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-500/20 active:scale-95 transition-all"
+                            >
                               <CheckCircle2 className="h-4 w-4 mr-1.5" />
                               Confirm
                             </Button>
@@ -334,7 +316,13 @@ export default function AdminAppointmentsPage() {
                             <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-400 hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-all active:scale-95" title="Reschedule">
                               <CalendarClock className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-all active:scale-95" title="Cancel">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDelete(apt.id)}
+                              className="h-9 w-9 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-all active:scale-95"
+                              title="Cancel"
+                            >
                               <XCircle className="h-4 w-4" />
                             </Button>
                           </>
@@ -349,6 +337,11 @@ export default function AdminAppointmentsPage() {
         })}
       </div>
 
+      <BookAppointmentModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={fetchAppointments}
+      />
     </div>
   )
 }

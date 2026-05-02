@@ -132,7 +132,7 @@ export function RegisterPatientModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[700px] bg-white dark:bg-slate-950 border-none rounded-[28px] shadow-2xl overflow-hidden p-0">
+      <DialogContent className="sm:max-w-[700px] bg-[#f8fcfb] dark:bg-slate-950 border-none rounded-[28px] shadow-2xl overflow-hidden p-0">
         <DialogHeader className="bg-emerald-600 px-8 py-10 text-white relative">
           <div className="flex items-center gap-4">
             <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-md">

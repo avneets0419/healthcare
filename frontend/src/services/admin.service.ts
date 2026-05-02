@@ -1,31 +1,26 @@
-import axios from 'axios';
-
-const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL ? `${process.env.NEXT_PUBLIC_API_URL}/admin` : 'http://localhost:5001/api/admin',
-  withCredentials: true
-});
+import api from '@/lib/axios';
 
 export const adminService = {
   getDoctors: async (search: string = "", specialization: string = "") => {
     const params = new URLSearchParams();
     if (search) params.append("search", search);
     if (specialization) params.append("specialization", specialization);
-    const { data } = await api.get(`/doctors?${params.toString()}`);
+    const { data } = await api.get(`/admin/doctors?${params.toString()}`);
     return data;
   },
 
   createDoctor: async (doctorData: Record<string, unknown>) => {
-    const { data } = await api.post('/doctors', doctorData);
+    const { data } = await api.post('/admin/doctors', doctorData);
     return data;
   },
 
   updateDoctor: async (id: string, doctorData: Record<string, unknown>) => {
-    const { data } = await api.put(`/doctors/${id}`, doctorData);
+    const { data } = await api.put(`/admin/doctors/${id}`, doctorData);
     return data;
   },
 
   deleteDoctor: async (id: string) => {
-    const { data } = await api.delete(`/doctors/${id}`);
+    const { data } = await api.delete(`/admin/doctors/${id}`);
     return data;
   }
 };

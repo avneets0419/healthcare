@@ -45,8 +45,8 @@ export function AppSidebar({ role }: { role: "admin" | "doctor" | "patient" }) {
   const currentItems = items[role] || items.patient;
 
   return (
-    <Sidebar className="border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
-      <SidebarHeader className="h-16 px-6 flex justify-center border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
+    <Sidebar className="border-r border-emerald-100/50 dark:border-slate-800 bg-[#f8fcfb] dark:bg-slate-950">
+      <SidebarHeader className="h-16 px-6 flex justify-center border-b border-emerald-100/50 dark:border-slate-800 bg-[#f8fcfb] dark:bg-slate-950">
         <div className="flex items-center gap-3 font-bold text-xl text-slate-800 dark:text-slate-100 tracking-tight">
           <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-sm">
             <Activity className="h-5 w-5" />

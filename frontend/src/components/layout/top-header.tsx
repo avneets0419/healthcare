@@ -30,7 +30,7 @@ export function TopHeader({ userName, userRole }: { userName: string, userRole: 
   };
 
   return (
-    <header className="flex h-16 shrink-0 items-center gap-4 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-6 sticky top-0 z-10 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+    <header className="flex h-16 shrink-0 items-center gap-4 border-b border-emerald-100/50 dark:border-slate-800 bg-[#f8fcfb] dark:bg-slate-950 px-6 sticky top-0 z-10 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
       <div className="flex items-center gap-4">
         <SidebarTrigger className="-ml-1 text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-primary transition-colors" />
         <div className="w-px h-4 bg-slate-200 dark:bg-slate-800" />

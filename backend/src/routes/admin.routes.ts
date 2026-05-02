@@ -4,6 +4,8 @@ import { getDashboardStats, getTrafficData } from "../controllers/adminDashbaord
 import { authMiddleware } from "../middleware/auth.middleware";
 import { roleMiddleware } from "../middleware/role.middleware";
 import { getPatients, createPatient, updatePatient, deletePatient } from "../controllers/adminpatient.controller";
+import { getAllAppointments, createAppointment, updateAppointmentStatus, deleteAppointment } from "../controllers/adminAppointment.controller";
+
 const router = Router();
 
 // ✅ PROTECT ALL ADMIN ROUTES
@@ -11,6 +13,7 @@ router.use(authMiddleware, roleMiddleware(["admin"]));
 
 router.get("/dashboard", getDashboardStats);
 router.get("/traffic", getTrafficData);
+
 router.get("/doctors", getAllDoctors);
 router.post("/doctors", createDoctor);
 router.put("/doctors/:id", updateDoctor);
@@ -20,4 +23,10 @@ router.get("/patients", getPatients);
 router.post("/patients", createPatient);
 router.put("/patients/:id", updatePatient);
 router.delete("/patients/:id", deletePatient);
+
+router.get("/appointments", getAllAppointments);
+router.post("/appointments", createAppointment);
+router.patch("/appointments/:id/status", updateAppointmentStatus);
+router.delete("/appointments/:id", deleteAppointment);
+
 export const adminRouter = router;
