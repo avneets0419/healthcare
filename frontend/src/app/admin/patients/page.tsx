@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Plus, Search, Filter, HeartPulse, Activity, UserCheck, Stethoscope, Eye, Edit, ArrowRightFromLine, Loader2 } from "lucide-react"
+import { Plus, Search, Filter, HeartPulse, Activity, UserCheck, Stethoscope, Eye, Edit, ArrowRightFromLine, Loader2, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { StatCard } from "@/components/shared/StatCard"
@@ -10,6 +10,7 @@ import { RegisterPatientModal } from "@/components/admin/RegisterPatientModal"
 import { ViewPatientModal } from "@/components/admin/ViewPatientModal"
 import { patientService } from "@/services/admin-patient.service"
 import { Patient } from "@/types/patient.types"
+import { toast } from "sonner"
 
 // Helps map a string to a predictable teal/emerald tint for avatars
 const getAvatarStyle = (name: string) => {
@@ -50,6 +51,30 @@ export default function AdminPatientsPage() {
     setIsViewModalOpen(true)
   }
 
+  const handleEditPatient = (patient: Patient) => {
+    setSelectedPatient(patient)
+    setIsViewModalOpen(false)
+    setIsModalOpen(true)
+  }
+
+  const handleDeletePatient = async (id: string) => {
+    if (window.confirm("Are you sure you want to delete this patient profile? This action cannot be undone.")) {
+      try {
+        await patientService.deletePatient(id)
+        toast.success("Patient profile deleted successfully")
+        setIsViewModalOpen(false)
+        fetchPatients()
+      } catch (error) {
+        toast.error("Failed to delete patient profile")
+      }
+    }
+  }
+
+  const handleRegisterModalClose = () => {
+    setIsModalOpen(false)
+    setSelectedPatient(null)
+  }
+
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchPatients()
@@ -59,7 +84,7 @@ export default function AdminPatientsPage() {
 
   return (
     <div className="space-y-10 animate-in fade-in zoom-in-95 duration-700">
-      {/* 1. Clear Visual Hierarchy + Page Title */}
+      {/* ... header and stat cards same as before ... */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
@@ -69,15 +94,17 @@ export default function AdminPatientsPage() {
             Monitor admissions, track treatment progress, and manage patient records.
           </p>
         </div>
-        <Button 
-          onClick={() => setIsModalOpen(true)}
+        <Button
+          onClick={() => {
+            setSelectedPatient(null);
+            setIsModalOpen(true);
+          }}
           className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20 hover:-translate-y-0.5 transition-all text-sm px-5 py-2.5 h-auto"
         >
           <Plus className="mr-2 h-4 w-4" /> Register Patient
         </Button>
       </div>
 
-      {/* 2. Top Summary Section (Insights & Context) */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Total Patients"
@@ -111,10 +138,7 @@ export default function AdminPatientsPage() {
         />
       </div>
 
-      {/* Main Content Area */}
       <div className="flex flex-col gap-6">
-        
-        {/* 3. Improved Search & Filter UX */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white dark:bg-slate-800/80 p-3 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700/50">
           <div className="relative flex-1 w-full sm:max-w-[28rem] group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
@@ -125,9 +149,9 @@ export default function AdminPatientsPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          
+
           <div className="flex items-center gap-3 w-full sm:w-auto">
-            <select 
+            <select
               className="h-11 px-4 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-emerald-500/30 focus:border-emerald-500 outline-none cursor-pointer w-full sm:w-auto shadow-sm text-slate-600 dark:text-slate-300"
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
@@ -138,7 +162,7 @@ export default function AdminPatientsPage() {
               <option value="recovered">Recovered</option>
               <option value="inactive">Inactive</option>
             </select>
-             <select 
+            <select
               className="h-11 px-4 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-emerald-500/30 focus:border-emerald-500 outline-none cursor-pointer w-full sm:w-auto shadow-sm text-slate-600 dark:text-slate-300 hidden md:block"
               value={filterDepartment}
               onChange={(e) => setFilterDepartment(e.target.value)}
@@ -159,9 +183,7 @@ export default function AdminPatientsPage() {
           </div>
         </div>
 
-        {/* 4. Upgrade Table Design (Card Hybrid for Patients) */}
         <div className="flex flex-col gap-3">
-          {/* Header Row */}
           <div className="hidden lg:grid grid-cols-12 gap-4 px-6 py-3 text-xs font-semibold text-slate-400 uppercase tracking-widest">
             <div className="col-span-4">Patient Profile</div>
             <div className="col-span-2">Admission Date</div>
@@ -181,15 +203,14 @@ export default function AdminPatientsPage() {
             </div>
           ) : (
             patients.map((patient) => (
-              <div 
-                key={patient.id} 
+              <div
+                key={patient.id}
                 className="group flex flex-col lg:grid lg:grid-cols-12 gap-4 items-center bg-white dark:bg-slate-800/80 p-4 lg:px-6 rounded-2xl border border-slate-100 dark:border-slate-700/50 shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:border-emerald-100 dark:hover:border-emerald-900/30 transition-all duration-300"
               >
-                {/* Profile */}
                 <div className="col-span-4 w-full flex items-center gap-4">
                   <Avatar className="h-12 w-12 border-2 border-white dark:border-slate-800 shadow-sm bg-white">
                     <AvatarFallback className={`font-bold ${getAvatarStyle(patient.name)}`}>
-                      {patient.name.split(" ").map(n => n[0]).join("").substring(0,2)}
+                      {patient.name.split(" ").map(n => n[0]).join("").substring(0, 2)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
@@ -206,29 +227,25 @@ export default function AdminPatientsPage() {
                   </div>
                 </div>
 
-                {/* Admission Date */}
                 <div className="col-span-2 w-full lg:w-auto text-sm text-slate-500 dark:text-slate-400 font-medium tracking-tight">
                   {new Date(patient.createdAt).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })}
                 </div>
 
-                {/* Condition / Diagnosis */}
                 <div className="col-span-2 w-full lg:w-auto">
                   <span className="inline-flex items-center px-2.5 py-1 rounded-lg border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 text-xs font-semibold whitespace-nowrap shadow-sm">
                     {patient.condition || "General"}
                   </span>
                 </div>
 
-                {/* Status */}
                 <div className="col-span-2 w-full lg:w-auto">
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold tracking-wide uppercase shadow-sm ${
-                    patient.status?.toLowerCase() === "active" 
-                      ? "bg-emerald-100/80 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50" 
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold tracking-wide uppercase shadow-sm ${patient.status?.toLowerCase() === "active"
+                      ? "bg-emerald-100/80 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50"
                       : patient.status?.toLowerCase() === "recovered"
-                      ? "bg-teal-50 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400 border border-teal-200 dark:border-teal-800/50"
-                      : patient.status?.toLowerCase() === "under_treatment"
-                      ? "bg-amber-100/80 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50"
-                      : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700"
-                  }`}>
+                        ? "bg-teal-50 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400 border border-teal-200 dark:border-teal-800/50"
+                        : patient.status?.toLowerCase() === "under_treatment"
+                          ? "bg-amber-100/80 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50"
+                          : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700"
+                    }`}>
                     {patient.status?.toLowerCase() === "active" && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2 animate-pulse" />}
                     {patient.status?.toLowerCase() === "under_treatment" && <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-2" />}
                     {patient.status?.toLowerCase() === "recovered" && <span className="w-1.5 h-1.5 rounded-full bg-teal-500 mr-2" />}
@@ -236,22 +253,33 @@ export default function AdminPatientsPage() {
                   </span>
                 </div>
 
-                {/* Actions (Visible on Hover/Always on Mobile) */}
                 <div className="col-span-2 w-full lg:w-auto flex items-center lg:justify-end gap-2 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity duration-300 pr-2">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-9 w-9 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20" 
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-9 w-9 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
                     title="View Patient Record"
                     onClick={() => handleViewPatient(patient)}
                   >
                     <Eye className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-400 hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20" title="Edit Patient">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-9 w-9 text-slate-400 hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20"
+                    title="Edit Patient"
+                    onClick={() => handleEditPatient(patient)}
+                  >
                     <Edit className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20" title="Discharge Patient">
-                    <ArrowRightFromLine className="h-4 w-4" />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-9 w-9 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                    title="Delete Patient"
+                    onClick={() => handleDeletePatient(patient.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
@@ -260,16 +288,19 @@ export default function AdminPatientsPage() {
         </div>
       </div>
 
-      <RegisterPatientModal 
+      <RegisterPatientModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={handleRegisterModalClose}
         onSuccess={fetchPatients}
+        patient={selectedPatient}
       />
 
-      <ViewPatientModal 
+      <ViewPatientModal
         isOpen={isViewModalOpen}
         onClose={() => setIsViewModalOpen(false)}
         patient={selectedPatient}
+        onEdit={handleEditPatient}
+        onDelete={handleDeletePatient}
       />
     </div>
   )

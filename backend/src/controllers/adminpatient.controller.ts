@@ -116,18 +116,19 @@ export const createPatient = async (req: Request, res: Response) => {
 export const updatePatient = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const { name, email, phone, status, condition } = req.body;
+        const { name, email, phone, status, condition, age, gender, department } = req.body;
 
         const updatedPatient = await prisma.patient.update({
             where: { id },
-
-            // ✅ FIX: prevent overwriting with undefined
             data: {
                 ...(name && { name }),
                 ...(email && { email }),
                 ...(phone && { phone }),
                 ...(status && { status }),
                 ...(condition && { condition }),
+                ...(age && { age: parseInt(age) }),
+                ...(gender && { gender }),
+                ...(department && { department }),
             },
         });
 
