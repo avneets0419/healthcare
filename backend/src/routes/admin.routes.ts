@@ -4,7 +4,7 @@ import { getDashboardStats, getTrafficData } from "../controllers/adminDashbaord
 import { authMiddleware } from "../middleware/auth.middleware";
 import { roleMiddleware } from "../middleware/role.middleware";
 import { getPatients, createPatient, updatePatient, deletePatient } from "../controllers/adminpatient.controller";
-import { getAllAppointments, createAppointment, updateAppointmentStatus, deleteAppointment } from "../controllers/adminAppointment.controller";
+import { getAllAppointments, createAppointment, updateAppointmentStatus, deleteAppointment, rescheduleAppointment } from "../controllers/adminAppointment.controller";
 
 const router = Router();
 
@@ -28,6 +28,7 @@ router.delete("/patients/:id", deletePatient);
 router.get("/appointments", getAllAppointments);
 router.post("/appointments", createAppointment);
 router.patch("/appointments/:id/status", updateAppointmentStatus);
+router.post("/appointments/:id/reschedule", rescheduleAppointment);
 router.delete("/appointments/:id", deleteAppointment);
 
 export const adminRouter = router;

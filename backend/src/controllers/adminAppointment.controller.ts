@@ -117,8 +117,56 @@ export const updateAppointmentStatus = async (req: Request, res: Response) => {
 export const deleteAppointment = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
+        
+        // Find appointment to free up slot
+        const appt = await prisma.appointment.findUnique({ where: { id } });
+        if (appt && appt.doctorId && appt.time.includes('T')) {
+            const [d, t] = appt.time.split('T');
+            await prisma.availabilitySlot.updateMany({
+                where: { doctorId: appt.doctorId, date: d, startTime: t },
+                data: { isBooked: false }
+            });
+        }
+
         await prisma.appointment.delete({ where: { id } });
         res.status(204).send();
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+export const rescheduleAppointment = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { time } = req.body;
+
+        const oldAppt = await prisma.appointment.findUnique({ where: { id } });
+        if (!oldAppt) return res.status(404).json({ message: "Appointment not found" });
+
+        // 1. Free up old slot
+        if (oldAppt.doctorId && oldAppt.time.includes('T')) {
+            const [d, t] = oldAppt.time.split('T');
+            await prisma.availabilitySlot.updateMany({
+                where: { doctorId: oldAppt.doctorId, date: d, startTime: t },
+                data: { isBooked: false }
+            });
+        }
+
+        // 2. Update appointment
+        const updated = await prisma.appointment.update({
+            where: { id },
+            data: { time, status: "Scheduled" },
+            include: { doctor: true, patient: true }
+        });
+
+        // 3. Mark new slot as booked
+        const [newD, newT] = time.split('T');
+        await prisma.availabilitySlot.updateMany({
+            where: { doctorId: updated.doctorId!, date: newD, startTime: newT },
+            data: { isBooked: true }
+        });
+
+        res.status(200).json(updated);
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }

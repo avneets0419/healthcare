@@ -318,7 +318,7 @@ export function BookAppointmentModal({
               </div>
               {isSearching && (
                 <div className="absolute z-50 w-full mt-2 bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden max-h-[200px] overflow-y-auto">
-                  {filteredPatients.map((p) => (
+                  {filteredPatients.map((p: any) => (
                     <div key={p.id} onClick={() => { setValue("patientId", p.id); setSearchTerm(""); setIsSearching(false); }} className="flex items-center gap-3 p-3 hover:bg-emerald-50 cursor-pointer text-sm">
                       <Avatar className="h-8 w-8 rounded-xl"><AvatarFallback className="bg-emerald-100 text-xs font-bold text-emerald-700">{getInitials(p.name)}</AvatarFallback></Avatar>
                       <div className="flex flex-col"><span className="font-bold text-xs">{p.name}</span><span className="text-[10px] text-slate-500">{p.email}</span></div>
@@ -358,7 +358,7 @@ export function BookAppointmentModal({
                 </div>
               ) : (
                 <div className="flex flex-wrap gap-2 pt-1">
-                  {availableTimesForDate.map((slot) => (
+                  {availableTimesForDate.map((slot: any) => (
                     <button
                       key={slot.id}
                       type="button"

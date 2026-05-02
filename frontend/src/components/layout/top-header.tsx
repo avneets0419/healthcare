@@ -1,7 +1,7 @@
 "use client";
 
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Search, LogOut, Settings, HelpCircle } from "lucide-react";
+import { Search, LogOut, HelpCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
@@ -78,10 +78,6 @@ export function TopHeader({ userName, userRole }: { userName: string, userRole: 
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator className="bg-slate-100 dark:bg-slate-800" />
-            <DropdownMenuItem className="flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer focus:bg-slate-50 dark:focus:bg-slate-800 transition-colors">
-              <Settings className="h-4 w-4 text-slate-500" />
-              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Profile Settings</span>
-            </DropdownMenuItem>
             <DropdownMenuItem className="flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer focus:bg-slate-50 dark:focus:bg-slate-800 transition-colors">
               <HelpCircle className="h-4 w-4 text-slate-500" />
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Help &amp; Support</span>

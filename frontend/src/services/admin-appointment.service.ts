@@ -30,5 +30,10 @@ export const adminAppointmentService = {
 
   deleteAppointment: async (id: string) => {
     await api.delete(`/admin/appointments/${id}`);
+  },
+
+  rescheduleAppointment: async (id: string, time: string) => {
+    const { data } = await api.post<Appointment>(`/admin/appointments/${id}/reschedule`, { time });
+    return data;
   }
 };
