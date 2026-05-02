@@ -18,43 +18,8 @@ import {
   Loader2,
   CalendarCheck
 } from "lucide-react";
-import api from "@/lib/axios";
 import { cancelAppointment } from "@/services/appointment.service";
-
-interface DashboardStats {
-  upcomingCount: number;
-  totalAppointments: number;
-  totalPrescriptions: number;
-  unreadNotifications: number;
-}
-
-const MOCK_STATS: DashboardStats = {
-  upcomingCount: 2,
-  totalAppointments: 14,
-  totalPrescriptions: 5,
-  unreadNotifications: 3,
-};
-
-const MOCK_UPCOMING: Appointment[] = [
-  {
-    id: "a1",
-    patientId: "me",
-    patientName: "Me",
-    doctorId: "d1",
-    doctorName: "Dr. Sarah Smith",
-    timeSlot: new Date(Date.now() + 2 * 24 * 3600_000).toISOString(),
-    status: "confirmed",
-  },
-  {
-    id: "a2",
-    patientId: "me",
-    patientName: "Me",
-    doctorId: "d2",
-    doctorName: "Dr. John Doe",
-    timeSlot: new Date(Date.now() + 5 * 24 * 3600_000).toISOString(),
-    status: "pending",
-  }
-];
+import { patientDashboardService, PatientDashboardStats } from "@/services/patient/dashboard.service";
 
 const NOTIFICATIONS = [
   { id: "n1", text: "Appointment confirmed by Dr. Sarah Smith", time: "2 hours ago" },
@@ -63,22 +28,21 @@ const NOTIFICATIONS = [
 ];
 
 export default function PatientDashboardPage() {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [stats, setStats] = useState<PatientDashboardStats | null>(null);
   const [upcoming, setUpcoming] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
-        // Mock loading
-        setTimeout(() => {
-          setStats(MOCK_STATS);
-          setUpcoming(MOCK_UPCOMING);
-          setLoading(false);
-        }, 800);
+        const data = await patientDashboardService.getDashboard();
+        setStats(data.stats);
+        setUpcoming(data.upcomingAppointments as Appointment[]);
       } catch (e) {
-        setStats(MOCK_STATS);
-        setUpcoming(MOCK_UPCOMING);
+        console.error("Failed to fetch dashboard:", e);
+        setError("Failed to load dashboard. Please try again.");
+      } finally {
         setLoading(false);
       }
     };
@@ -86,24 +50,24 @@ export default function PatientDashboardPage() {
     fetchDashboard();
   }, []);
 
-  const handleCancel = async (id: string) => {
-    try {
-      await cancelAppointment(id);
-      setUpcoming((prev) => prev.filter(a => a.id !== id));
-      alert("Appointment cancelled");
-    } catch {
-      // optimistic update
-      setUpcoming((prev) => prev.filter(a => a.id !== id));
-      alert("Appointment cancelled");
-    }
-  };
-
-  if (loading || !stats) {
+  if (loading) {
     return (
       <AuthGuard allowedRoles={["patient"]}>
         <div className="flex flex-col items-center justify-center min-h-[60vh]">
           <Loader2 className="h-10 w-10 animate-spin text-blue-500 mb-4" />
           <p className="text-sm font-bold uppercase tracking-widest text-slate-400">Loading dashboard...</p>
+        </div>
+      </AuthGuard>
+    );
+  }
+
+  if (error || !stats) {
+    return (
+      <AuthGuard allowedRoles={["patient"]}>
+        <div className="flex flex-col items-center justify-center min-h-[60vh]">
+          <p className="text-sm font-bold uppercase tracking-widest text-rose-400">
+            {error ?? "Something went wrong."}
+          </p>
         </div>
       </AuthGuard>
     );
@@ -125,33 +89,33 @@ export default function PatientDashboardPage() {
 
         {/* 2. Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <SummaryCard 
-            title="Upcoming Appointments" 
-            value={stats.upcomingCount} 
-            icon={CalendarDays} 
-            colorClass="bg-blue-100 dark:bg-blue-900/40" 
-            iconColorClass="text-blue-600 dark:text-blue-400" 
+          <SummaryCard
+            title="Upcoming Appointments"
+            value={stats.upcomingCount}
+            icon={CalendarDays}
+            colorClass="bg-blue-100 dark:bg-blue-900/40"
+            iconColorClass="text-blue-600 dark:text-blue-400"
           />
-          <SummaryCard 
-            title="Total Appointments" 
-            value={stats.totalAppointments} 
-            icon={CalendarCheck} 
-            colorClass="bg-emerald-100 dark:bg-emerald-900/40" 
-            iconColorClass="text-emerald-600 dark:text-emerald-400" 
+          <SummaryCard
+            title="Total Appointments"
+            value={stats.totalAppointments}
+            icon={CalendarCheck}
+            colorClass="bg-emerald-100 dark:bg-emerald-900/40"
+            iconColorClass="text-emerald-600 dark:text-emerald-400"
           />
-          <SummaryCard 
-            title="Prescriptions" 
-            value={stats.totalPrescriptions} 
-            icon={FileText} 
-            colorClass="bg-amber-100 dark:bg-amber-900/40" 
-            iconColorClass="text-amber-600 dark:text-amber-400" 
+          <SummaryCard
+            title="Prescriptions"
+            value={stats.totalPrescriptions}
+            icon={FileText}
+            colorClass="bg-amber-100 dark:bg-amber-900/40"
+            iconColorClass="text-amber-600 dark:text-amber-400"
           />
-          <SummaryCard 
-            title="Notifications" 
-            value={stats.unreadNotifications} 
-            icon={Bell} 
-            colorClass="bg-rose-100 dark:bg-rose-900/40" 
-            iconColorClass="text-rose-600 dark:text-rose-400" 
+          <SummaryCard
+            title="Notifications"
+            value={stats.unreadNotifications}
+            icon={Bell}
+            colorClass="bg-rose-100 dark:bg-rose-900/40"
+            iconColorClass="text-rose-600 dark:text-rose-400"
           />
         </div>
 
@@ -186,7 +150,10 @@ export default function PatientDashboardPage() {
                       <AppointmentCard
                         key={appt.id}
                         appointment={appt}
-                        onCancel={handleCancel}
+                        onCancel={async (id) => {
+                          await cancelAppointment(id);
+                          setUpcoming((prev) => prev.filter(a => a.id !== id));
+                        }}
                       />
                     ))}
                   </div>
