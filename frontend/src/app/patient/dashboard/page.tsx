@@ -21,11 +21,7 @@ import {
 import { cancelAppointment } from "@/services/appointment.service";
 import { patientDashboardService, PatientDashboardStats } from "@/services/patient/dashboard.service";
 
-const NOTIFICATIONS = [
-  { id: "n1", text: "Appointment confirmed by Dr. Sarah Smith", time: "2 hours ago" },
-  { id: "n2", text: "New prescription added by Dr. Jessica Wilson", time: "1 day ago" },
-  { id: "n3", text: "Reminder: Upcoming appointment tomorrow", time: "1 day ago" },
-];
+
 
 export default function PatientDashboardPage() {
   const [stats, setStats] = useState<PatientDashboardStats | null>(null);
@@ -188,34 +184,8 @@ export default function PatientDashboardPage() {
               </div>
             </div>
 
-            {/* 5. Notifications Section */}
-            <div className="bg-white dark:bg-slate-900/50 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
-              <div className="flex items-center justify-between mb-6 relative z-10">
-                <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
-                  Recent Alerts
-                </h2>
-                <Badge variant="secondary" className="bg-rose-100 text-rose-700 hover:bg-rose-100 dark:bg-rose-900/40 dark:text-rose-400 border-0 rounded-full px-2 font-black text-[10px] tracking-widest">
-                  {NOTIFICATIONS.length} NEW
-                </Badge>
-              </div>
-              <div className="space-y-4 relative z-10">
-                {NOTIFICATIONS.map((notif) => (
-                  <div key={notif.id} className="flex gap-3">
-                    <div className="mt-0.5 shrink-0">
-                      <div className="h-2 w-2 rounded-full bg-rose-500 mt-1.5" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                        {notif.text}
-                      </p>
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
-                        {notif.time}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+
+
           </div>
         </div>
       </div>

@@ -23,8 +23,9 @@ app.use(express.json());
 
 app.use("/api", authRouter);
 app.use("/api/admin", adminRouter);
-app.use("/api", doctorRouter);
 app.use("/api/patient", patientRouter);
+app.use("/api", doctorRouter);
+
 app.use("/api", dashboardRoutes);
 
 
