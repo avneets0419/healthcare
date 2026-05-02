@@ -64,6 +64,8 @@ export function BookAppointmentModal({
   const [fetchingData, setFetchingData] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [availabilitySlots, setAvailabilitySlots] = useState<any[]>([]);
+  const [fetchingSlots, setFetchingSlots] = useState(false);
 
   const {
     register,
@@ -71,24 +73,49 @@ export function BookAppointmentModal({
     setValue,
     reset,
     control,
+    watch,
     formState: { errors },
   } = useForm<AppointmentFormValues>({
     resolver: zodResolver(appointmentSchema),
     defaultValues: {
       type: "",
       price: "500",
+      time: "",
     },
   });
+
+  const selectedTime = watch("time");
+
+  useEffect(() => {
+    loadData();
+  }, [isOpen]);
 
   const selectedDomain = useWatch({ control, name: "type" });
   const selectedDoctorId = useWatch({ control, name: "doctorId" });
   const selectedPatientId = useWatch({ control, name: "patientId" });
+  const selectedDate = useWatch({ control, name: "date" });
 
   useEffect(() => {
-    if (isOpen) {
-      loadData();
+    if (selectedDoctorId) {
+      fetchSlots(selectedDoctorId);
+    } else {
+      setAvailabilitySlots([]);
     }
-  }, [isOpen]);
+  }, [selectedDoctorId]);
+
+  const fetchSlots = async (doctorId: string) => {
+    setFetchingSlots(true);
+    try {
+      const data = await adminService.getDoctorAvailability(doctorId);
+      setAvailabilitySlots(data);
+    } catch (error) {
+      console.error("Failed to fetch slots");
+    } finally {
+      setFetchingSlots(false);
+    }
+  };
+
+  const availableTimesForDate = availabilitySlots.filter(s => s.date === selectedDate && s.status === "available" && !s.isBooked);
 
   // Handle outside click to close search dropdown
   useEffect(() => {
@@ -305,14 +332,45 @@ export function BookAppointmentModal({
               <Label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
                 <CalendarIcon className="h-2.5 w-2.5" /> Date
               </Label>
-              <Input type="date" className="h-12 rounded-2xl border-2 font-bold text-sm px-4" {...register("date")} />
+              <Input
+                type="date"
+                className="h-12 rounded-2xl border-2 font-bold text-sm px-4 focus:border-emerald-500"
+                {...register("date")}
+              />
             </div>
 
             <div className="space-y-2 col-span-2 sm:col-span-1">
               <Label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
-                <Clock className="h-2.5 w-2.5" /> Time
+                <Clock className="h-2.5 w-2.5" /> Available Slots
               </Label>
-              <Input type="time" className="h-12 rounded-2xl border-2 font-bold text-sm px-4" {...register("time")} />
+              {fetchingSlots ? (
+                <div className="h-12 flex items-center gap-2 px-4 bg-slate-50 rounded-2xl animate-pulse">
+                  <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+                  <span className="text-[10px] font-bold text-slate-400">Fetching...</span>
+                </div>
+              ) : !selectedDate ? (
+                <div className="h-12 flex items-center px-4 bg-slate-50 rounded-2xl text-[10px] font-bold text-slate-400 italic">
+                  Select a date first
+                </div>
+              ) : availableTimesForDate.length === 0 ? (
+                <div className="h-12 flex items-center px-4 bg-rose-50 rounded-2xl text-[10px] font-bold text-rose-400 italic">
+                  No slots set for this date
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {availableTimesForDate.map((slot) => (
+                    <button
+                      key={slot.id}
+                      type="button"
+                      onClick={() => setValue("time", slot.startTime)}
+                      className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all border-2 ${selectedTime === slot.startTime ? "bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-500/20" : "bg-white border-slate-100 text-slate-600 hover:border-emerald-200"}`}
+                    >
+                      {slot.startTime}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {errors.time && <p className="text-[10px] font-bold text-red-500">{errors.time.message}</p>}
             </div>
 
             <div className="space-y-2 col-span-2 sm:col-span-1">

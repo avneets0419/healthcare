@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getAllDoctors, createDoctor, updateDoctor, deleteDoctor } from "../controllers/adminDoctor.controller";
+import { getAllDoctors, createDoctor, updateDoctor, deleteDoctor, getDoctorAvailability } from "../controllers/adminDoctor.controller";
 import { getDashboardStats, getTrafficData } from "../controllers/adminDashbaord.controller";
 import { authMiddleware } from "../middleware/auth.middleware";
 import { roleMiddleware } from "../middleware/role.middleware";
@@ -15,6 +15,7 @@ router.get("/dashboard", getDashboardStats);
 router.get("/traffic", getTrafficData);
 
 router.get("/doctors", getAllDoctors);
+router.get("/doctors/:id/availability", getDoctorAvailability);
 router.post("/doctors", createDoctor);
 router.put("/doctors/:id", updateDoctor);
 router.delete("/doctors/:id", deleteDoctor);

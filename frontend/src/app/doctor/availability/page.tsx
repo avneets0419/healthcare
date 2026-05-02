@@ -14,6 +14,7 @@ import {
   Ban,
   AlertTriangle,
   Loader2,
+  X,
 } from "lucide-react";
 import AuthGuard from "@/components/shared/AuthGuard";
 import {
@@ -23,17 +24,17 @@ import {
   DialogTitle,
   DialogClose,
 } from "@/components/ui/dialog";
-import { X } from "lucide-react";
 
 export default function DoctorAvailabilityPage() {
   const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedTimes, setSelectedTimes] = useState<string[]>([]);
   const [isAdding, setIsAdding] = useState(false);
+  const [isManual, setIsManual] = useState(false);
   
   const [date, setDate] = useState("");
-  const [startTime, setStartTime] = useState("");
-  const [endTime, setEndTime] = useState("");
-
+  const [manualStart, setManualStart] = useState("");
+  const [manualEnd, setManualEnd] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const [editState, setEditState] = useState<{
@@ -51,7 +52,6 @@ export default function DoctorAvailabilityPage() {
       const data = await getDoctorSchedule();
       setSlots(data);
     } catch {
-      // Use empty list or fallback if API fails
       setSlots([]);
     } finally {
       setLoading(false);
@@ -64,33 +64,45 @@ export default function DoctorAvailabilityPage() {
 
   const handleAddSlot = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!date || !startTime || !endTime) return;
+    if (!date) return;
+    if (!isManual && selectedTimes.length === 0) return;
+    if (isManual && (!manualStart || !manualEnd)) return;
     
     setIsAdding(true);
     try {
-      const newSlot = await addAvailabilitySlot({ date, startTime, endTime });
-      setSlots((prev) => [...prev, newSlot].sort((a, b) => new Date(`${a.date}T${a.startTime}`).getTime() - new Date(`${b.date}T${b.startTime}`).getTime()));
+      if (isManual) {
+        const newSlot = await addAvailabilitySlot({ date, startTime: manualStart, endTime: manualEnd });
+        setSlots((prev) => [...prev, newSlot].sort((a, b) => new Date(`${a.date}T${a.startTime}`).getTime() - new Date(`${b.date}T${b.startTime}`).getTime()));
+        setManualStart("");
+        setManualEnd("");
+      } else {
+        const promises = selectedTimes.map(t => {
+          const hour = parseInt(t.split(':')[0]);
+          const nextHour = (hour + 1).toString().padStart(2, '0');
+          return addAvailabilitySlot({ 
+            date, 
+            startTime: t, 
+            endTime: `${nextHour}:00` 
+          });
+        });
+
+        const newSlots = await Promise.all(promises);
+        setSlots((prev) => [...prev, ...newSlots].sort((a, b) => new Date(`${a.date}T${a.startTime}`).getTime() - new Date(`${b.date}T${b.startTime}`).getTime()));
+        setSelectedTimes([]);
+      }
       setDate("");
-      setStartTime("");
-      setEndTime("");
     } catch (err) {
-      console.error("Failed to add slot", err);
-      // Fallback for UI visualization if API fails
-      const fallbackSlot: AvailabilitySlot = {
-        id: Math.random().toString(),
-        doctorId: "d1",
-        date,
-        startTime,
-        endTime,
-        isBooked: false,
-      };
-      setSlots((prev) => [...prev, fallbackSlot].sort((a, b) => new Date(`${a.date}T${a.startTime}`).getTime() - new Date(`${b.date}T${b.startTime}`).getTime()));
-      setDate("");
-      setStartTime("");
-      setEndTime("");
+      console.error("Failed to add slots", err);
+      fetchSlots();
     } finally {
       setIsAdding(false);
     }
+  };
+
+  const toggleTimeSelection = (t: string) => {
+    setSelectedTimes(prev => 
+      prev.includes(t) ? prev.filter(time => time !== t) : [...prev, t]
+    );
   };
 
   const handleDelete = async (id: string) => {
@@ -100,7 +112,6 @@ export default function DoctorAvailabilityPage() {
       setSlots((prev) => prev.filter((s) => s.id !== id));
     } catch (err) {
       console.error("Failed to delete slot", err);
-      // Fallback for UI visualization
       setSlots((prev) => prev.filter((s) => s.id !== id));
     } finally {
       setDeletingId(null);
@@ -120,7 +131,6 @@ export default function DoctorAvailabilityPage() {
       );
     } catch (e) {
       console.error("Failed to toggle availability status", e);
-      alert("Failed to update slot status");
     }
   };
 
@@ -152,7 +162,6 @@ export default function DoctorAvailabilityPage() {
       setEditState({ open: false, slot: null, date: "", startTime: "", endTime: "", saving: false });
     } catch (e) {
       console.error("Failed to update slot", e);
-      alert("Failed to update slot");
       setEditState((s) => ({ ...s, saving: false }));
     }
   };
@@ -193,7 +202,7 @@ export default function DoctorAvailabilityPage() {
 
                <form onSubmit={handleAddSlot} className="relative z-10 space-y-5">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-extrabold uppercase tracking-widest text-emerald-100/80">Select Date</label>
+                    <label className="text-xs font-extrabold uppercase tracking-widest text-emerald-100/80">1. Select Date</label>
                     <Input 
                       type="date" 
                       required 
@@ -204,35 +213,69 @@ export default function DoctorAvailabilityPage() {
                     />
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-extrabold uppercase tracking-widest text-emerald-100/80">Start Time</label>
-                      <Input 
-                        type="time" 
-                        required 
-                        value={startTime}
-                        onChange={(e) => setStartTime(e.target.value)}
-                        className="h-12 bg-black/20 border-white/10 text-white placeholder:text-white/50 focus:ring-emerald-400/50 rounded-2xl backdrop-blur-sm [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert"
-                      />
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-extrabold uppercase tracking-widest text-emerald-100/80">2. Time Selection</label>
+                      <button 
+                        type="button"
+                        onClick={() => setIsManual(!isManual)}
+                        className="text-[9px] font-black uppercase tracking-widest bg-white/10 hover:bg-white/20 text-emerald-100 px-3 py-1 rounded-full transition-all border border-white/10"
+                      >
+                        {isManual ? "Switch to Quick Select" : "Manual Entry"}
+                      </button>
                     </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-extrabold uppercase tracking-widest text-emerald-100/80">End Time</label>
-                      <Input 
-                        type="time" 
-                        required 
-                        value={endTime}
-                        onChange={(e) => setEndTime(e.target.value)}
-                        className="h-12 bg-black/20 border-white/10 text-white placeholder:text-white/50 focus:ring-emerald-400/50 rounded-2xl backdrop-blur-sm [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert"
-                      />
-                    </div>
+
+                    {isManual ? (
+                      <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-emerald-200/60 uppercase">Start</label>
+                          <Input 
+                            type="time" 
+                            value={manualStart}
+                            onChange={(e) => setManualStart(e.target.value)}
+                            className="h-12 bg-black/20 border-white/10 text-white focus:ring-emerald-400/50 rounded-2xl backdrop-blur-sm [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-emerald-200/60 uppercase">End</label>
+                          <Input 
+                            type="time" 
+                            value={manualEnd}
+                            onChange={(e) => setManualEnd(e.target.value)}
+                            className="h-12 bg-black/20 border-white/10 text-white focus:ring-emerald-400/50 rounded-2xl backdrop-blur-sm [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert"
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-3 gap-2 animate-in fade-in zoom-in-95 duration-300">
+                        {[
+                          "09:00", "10:00", "11:00", 
+                          "12:00", "14:00", "15:00", 
+                          "16:00", "17:00", "18:00"
+                        ].map((t) => {
+                          const displayTime = new Date(`2000-01-01T${t}`).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                          const isSelected = selectedTimes.includes(t);
+                          return (
+                            <button
+                              key={t}
+                              type="button"
+                              onClick={() => toggleTimeSelection(t)}
+                              className={`py-3 rounded-xl text-[10px] font-black transition-all border-2 ${isSelected ? "bg-white border-white text-emerald-700 shadow-xl scale-105 z-10" : "bg-black/10 border-white/5 text-emerald-100/60 hover:bg-black/20"}`}
+                            >
+                              {displayTime}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
 
                   <Button 
                     type="submit" 
-                    disabled={isAdding}
+                    disabled={isAdding || (isManual ? (!manualStart || !manualEnd) : selectedTimes.length === 0)}
                     className="w-full h-12 mt-4 bg-white hover:bg-emerald-50 text-emerald-700 font-black tracking-widest uppercase rounded-2xl shadow-lg transition-all active:scale-95"
                   >
-                    {isAdding ? <Loader2 className="h-5 w-5 animate-spin" /> : "Add Slot"}
+                    {isAdding ? <Loader2 className="h-5 w-5 animate-spin" /> : isManual ? "Add Custom Slot" : selectedTimes.length > 0 ? `Confirm ${selectedTimes.length} Slots` : "Confirm Availability"}
                   </Button>
                </form>
             </div>

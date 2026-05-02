@@ -67,6 +67,27 @@ export const createAppointment = async (req: Request, res: Response) => {
             }
         });
 
+        // ✅ Mark availability slot as booked to prevent conflicts
+        try {
+            const [datePart, timePart] = time.split('T');
+            if (datePart && timePart) {
+                await prisma.availabilitySlot.updateMany({
+                    where: {
+                        doctorId,
+                        date: datePart,
+                        startTime: timePart,
+                        isBooked: false
+                    },
+                    data: {
+                        isBooked: true
+                    }
+                });
+            }
+        } catch (err) {
+            console.error("Failed to mark slot as booked:", err);
+            // Non-critical error, we still created the appointment
+        }
+
         res.status(201).json(appointment);
     } catch (error: any) {
         res.status(500).json({ message: error.message });

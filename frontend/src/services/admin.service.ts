@@ -22,5 +22,10 @@ export const adminService = {
   deleteDoctor: async (id: string) => {
     const { data } = await api.delete(`/admin/doctors/${id}`);
     return data;
+  },
+
+  getDoctorAvailability: async (id: string) => {
+    const { data } = await api.get(`/admin/doctors/${id}/availability`);
+    return data;
   }
 };

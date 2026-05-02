@@ -121,3 +121,18 @@ export const deleteDoctor = async (req: Request, res: Response) => {
     }
   }
 };
+export const getDoctorAvailability = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const slots = await prisma.availabilitySlot.findMany({
+      where: { doctorId: id },
+      orderBy: [
+        { date: "asc" },
+        { startTime: "asc" }
+      ]
+    });
+    res.status(200).json(slots);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch doctor availability" });
+  }
+};
