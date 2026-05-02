@@ -1,9 +1,8 @@
 "use client";
 
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Search, Bell } from "lucide-react";
+import { Search, LogOut, Settings, HelpCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,8 +12,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useRouter } from "next/navigation";
 
 export function TopHeader({ userName, userRole }: { userName: string, userRole: string }) {
+  const router = useRouter();
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    router.push("/auth/login");
+  };
+
   const greeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return "Good morning";
@@ -45,18 +52,10 @@ export function TopHeader({ userName, userRole }: { userName: string, userRole: 
       </div>
 
       <div className="ml-auto flex items-center gap-4">
-        {/* Notifications */}
-        {/* Notifications */}
-        <Button variant="ghost" size="icon" className="relative text-slate-500 rounded-full hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-slate-100 transition-colors">
-          <Bell className="h-5 w-5" />
-          <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-destructive border-[1.5px] border-white dark:border-slate-900 rounded-full" />
-        </Button>
-
-        {/* User Profile — DropdownMenuTrigger from @base-ui renders its own <button>,
-            so we render the avatar content directly inside it (no nested Button) */}
+        {/* User Profile */}
         <DropdownMenu>
           <DropdownMenuTrigger
-            className="ml-2 flex h-9 w-9 xl:w-auto xl:px-1 xl:gap-2 cursor-pointer items-center justify-center rounded-full xl:rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-primary hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="ml-2 flex h-9 w-9 xl:w-auto xl:px-1 xl:gap-2 cursor-pointer items-center justify-center rounded-full xl:rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/30 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             aria-label="User menu"
           >
             <Avatar className="h-8 w-8 border border-white dark:border-slate-800 shadow-sm transition-transform hover:scale-105">
@@ -69,20 +68,32 @@ export function TopHeader({ userName, userRole }: { userName: string, userRole: 
               <span className="text-[10px] uppercase font-extrabold tracking-wider text-emerald-600/80 leading-none">{userRole}</span>
             </div>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56" align="end">
-            <DropdownMenuLabel className="font-normal">
+          <DropdownMenuContent className="w-56 mt-2 rounded-2xl p-2 border-slate-200 dark:border-slate-800 shadow-xl" align="end">
+            <DropdownMenuLabel className="font-normal px-2 py-3">
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">{userName}</p>
-                <p className="text-xs leading-none text-muted-foreground capitalize">
-                  {userRole}
+                <p className="text-sm font-bold leading-none text-slate-900 dark:text-white">{userName}</p>
+                <p className="text-xs leading-none text-slate-500 capitalize">
+                  {userRole} Account
                 </p>
               </div>
             </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Profile Settings</DropdownMenuItem>
-            <DropdownMenuItem>Help &amp; Support</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive">Log out</DropdownMenuItem>
+            <DropdownMenuSeparator className="bg-slate-100 dark:bg-slate-800" />
+            <DropdownMenuItem className="flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer focus:bg-slate-50 dark:focus:bg-slate-800 transition-colors">
+              <Settings className="h-4 w-4 text-slate-500" />
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Profile Settings</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem className="flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer focus:bg-slate-50 dark:focus:bg-slate-800 transition-colors">
+              <HelpCircle className="h-4 w-4 text-slate-500" />
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Help &amp; Support</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator className="bg-slate-100 dark:bg-slate-800" />
+            <DropdownMenuItem
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer text-destructive focus:bg-red-50 dark:focus:bg-red-950/20 transition-colors"
+            >
+              <LogOut className="h-4 w-4" />
+              <span className="text-sm font-bold">Log out</span>
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
