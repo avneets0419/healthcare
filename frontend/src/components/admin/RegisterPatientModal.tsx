@@ -33,7 +33,7 @@ const patientSchema = z.object({
   gender: z.string().optional(),
   department: z.string().optional(),
   condition: z.string().optional(),
-  status: z.string().default("active"),
+  status: z.string(),
   password: z.string().min(6, "Password must be at least 6 characters").optional().or(z.literal("")),
 });
 
@@ -185,7 +185,7 @@ export function RegisterPatientModal({
 
             <div className="space-y-2 col-span-2 sm:col-span-1">
               <Label htmlFor="gender">Gender</Label>
-              <Select onValueChange={(v) => setValue("gender", v)}>
+              <Select onValueChange={(v: string | null) => setValue("gender", v || undefined)}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select gender" />
                 </SelectTrigger>
@@ -201,7 +201,7 @@ export function RegisterPatientModal({
               <Label htmlFor="status">Status</Label>
               <Select
                 defaultValue="active"
-                onValueChange={(v) => setValue("status", v)}
+                onValueChange={(v: string | null) => setValue("status", v || "active")}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select status" />
@@ -217,7 +217,7 @@ export function RegisterPatientModal({
 
             <div className="space-y-2 col-span-2 sm:col-span-1">
               <Label htmlFor="department">Department</Label>
-              <Select onValueChange={(v) => setValue("department", v)}>
+              <Select onValueChange={(v: string | null) => setValue("department", v || undefined)}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select department" />
                 </SelectTrigger>

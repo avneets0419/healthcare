@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { StatCard } from "@/components/shared/StatCard"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { RegisterPatientModal } from "@/components/admin/RegisterPatientModal"
+import { ViewPatientModal } from "@/components/admin/ViewPatientModal"
 import { patientService } from "@/services/admin-patient.service"
 import { Patient } from "@/types/patient.types"
 
@@ -26,6 +27,8 @@ export default function AdminPatientsPage() {
   const [patients, setPatients] = useState<Patient[]>([])
   const [loading, setLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false)
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
   const [filterStatus, setFilterStatus] = useState("")
   const [filterCondition, setFilterCondition] = useState("")
   const [filterDepartment, setFilterDepartment] = useState("")
@@ -40,6 +43,11 @@ export default function AdminPatientsPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleViewPatient = (patient: Patient) => {
+    setSelectedPatient(patient)
+    setIsViewModalOpen(true)
   }
 
   useEffect(() => {
@@ -230,7 +238,13 @@ export default function AdminPatientsPage() {
 
                 {/* Actions (Visible on Hover/Always on Mobile) */}
                 <div className="col-span-2 w-full lg:w-auto flex items-center lg:justify-end gap-2 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity duration-300 pr-2">
-                  <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20" title="View Patient Record">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-9 w-9 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20" 
+                    title="View Patient Record"
+                    onClick={() => handleViewPatient(patient)}
+                  >
                     <Eye className="h-4 w-4" />
                   </Button>
                   <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-400 hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20" title="Edit Patient">
@@ -250,6 +264,12 @@ export default function AdminPatientsPage() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSuccess={fetchPatients}
+      />
+
+      <ViewPatientModal 
+        isOpen={isViewModalOpen}
+        onClose={() => setIsViewModalOpen(false)}
+        patient={selectedPatient}
       />
     </div>
   )
