@@ -1,32 +1,13 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { DashboardLayout } from "@/components/layout/dashboard-layout";
-import AuthGuard from "@/components/shared/AuthGuard";
-import { decodeToken } from "@/lib/decodeToken";
+import AdminAuthWrapper from "@/components/shared/AdminAuthWrapper";
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [userName, setUserName] = useState<string>("Admin");
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      const decoded = decodeToken(token);
-      if (decoded?.name) {
-        setUserName(decoded.name);
-      }
-    }
-  }, []);
-
   return (
-    <AuthGuard allowedRoles={["admin"]}>
-      <DashboardLayout role="admin" userName={userName}>
-        {children}
-      </DashboardLayout>
-    </AuthGuard>
+    <AdminAuthWrapper>
+      {children}
+    </AdminAuthWrapper>
   );
 }

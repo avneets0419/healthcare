@@ -4,7 +4,6 @@ import { Users, DollarSign, TrendingUp, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { adminDashboardService, DashboardStats } from "@/services/adminDashboard.service";
 import { useEffect, useState } from "react";
-import AuthGuard from "@/components/shared/AuthGuard";
 
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -39,8 +38,7 @@ export default function AdminDashboardPage() {
   const normalize = (val: number) => max === 0 ? 0 : Math.round((val / max) * 100);
 
   return (
-    <AuthGuard allowedRoles={["admin"]}>
-      <div className="space-y-8 animate-in fade-in zoom-in-95 duration-700 max-w-[1600px] mx-auto pb-12">
+    <div className="space-y-8 animate-in fade-in zoom-in-95 duration-700 max-w-[1600px] mx-auto pb-12">
 
         {/* 1. Header & Actions */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6">
@@ -253,6 +251,5 @@ export default function AdminDashboardPage() {
           </div>
         </div>
       </div>
-    </AuthGuard>
   );
 }
