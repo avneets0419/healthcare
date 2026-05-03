@@ -8,6 +8,7 @@ import { patientRouter } from "./routes/patient.routes";
 import { seedDefaultUsers } from "./models/user.model";
 import { prisma } from "./lib/prisma";
 import dashboardRoutes from "./routes/dashboard.routes";
+import patientBookingRoutes from "./routes/patientBooking.routes";
 
 const app = express();
 
@@ -20,18 +21,19 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json());
-
+app.get("/api/health", (req, res) => {
+  res.status(200).json({ status: "OK", message: "Healthcare API is running" });
+});
 app.use("/api", authRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/patient", patientRouter);
+app.use("/api/patient", patientBookingRoutes);
 app.use("/api", doctorRouter);
 
 app.use("/api", dashboardRoutes);
 
 
-app.get("/api/health", (req, res) => {
-  res.status(200).json({ status: "OK", message: "Healthcare API is running" });
-});
+
 
 const PORT = process.env.PORT || 5000;
 

@@ -181,37 +181,8 @@ export default function DoctorDashboardPage() {
           </div>
         </div>
 
-        {/* 2. Alert Banner */}
-        <div className="bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/50 rounded-2xl p-1 shadow-sm flex flex-col sm:flex-row items-center gap-4 relative overflow-hidden transition-all hover:shadow-md hover:border-rose-300">
-          <div className="absolute top-0 left-0 w-1.5 h-full bg-rose-500" />
-          <div className="flex items-center gap-4 w-full p-3 pl-5">
-            <div className="bg-rose-100 dark:bg-rose-900/60 p-2.5 rounded-xl text-rose-600 dark:text-rose-400">
-              <AlertTriangle className="h-6 w-6 animate-pulse" strokeWidth={2.5} />
-            </div>
-            <div className="flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h4 className="text-base font-black text-rose-900 dark:text-rose-300">
-                  {(stats?.pendingPrescriptions ?? 0) > 0
-                    ? `You have ${stats?.pendingPrescriptions} pending prescriptions`
-                    : "Action Required"
-                  }
-                </h4>
-                <p className="text-sm font-semibold text-rose-700/90 dark:text-rose-400/80 mt-0.5">
-                  {(stats?.todayAppointments ?? 0) > 5
-                    ? "You are fully booked today. Expect a busy schedule."
-                    : "Complete your pending administrative tasks."
-                  }
-                </p>
-              </div>
-              <Button
-                onClick={() => window.location.href = '/doctor/appointments'}
-                className="shrink-0 bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-600/20 border-0 font-extrabold active:scale-95 transition-all rounded-xl h-10 px-5 text-xs uppercase tracking-widest flex items-center"
-              >
-                Review Now &rarr;
-              </Button>
-            </div>
-          </div>
-        </div>
+
+
 
         {/* 3. KPI Cards Grid */}
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
@@ -243,9 +214,7 @@ export default function DoctorDashboardPage() {
                 {stats?.todayAppointments ?? 0}
               </p>
 
-              <span className="text-[10px] font-bold text-teal-600 bg-teal-50 px-2.5 py-1 rounded-md uppercase tracking-widest">
-                +2 from yesterday
-              </span>
+
             </div>
           </div>
 
@@ -366,8 +335,8 @@ export default function DoctorDashboardPage() {
                     <div
                       key={appt.id}
                       className={`relative group p-6 rounded-[22px] border transition-all duration-500 overflow-hidden ${isNext
-                          ? 'bg-gradient-to-br from-teal-500 to-emerald-600 text-white border-teal-400 shadow-xl shadow-teal-500/30 scale-[1.02] z-10'
-                          : 'bg-white text-slate-900 border-slate-100 hover:border-slate-200 hover:shadow-md dark:bg-slate-800/50 dark:text-white dark:border-slate-700'
+                        ? 'bg-gradient-to-br from-teal-500 to-emerald-600 text-white border-teal-400 shadow-xl shadow-teal-500/30 scale-[1.02] z-10'
+                        : 'bg-white text-slate-900 border-slate-100 hover:border-slate-200 hover:shadow-md dark:bg-slate-800/50 dark:text-white dark:border-slate-700'
                         }`}
                     >
                       {isNext && (
@@ -380,8 +349,8 @@ export default function DoctorDashboardPage() {
 
                       <div className="flex items-center gap-4 mb-4">
                         <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg shadow-sm border transition-colors ${isNext
-                            ? 'bg-white/20 border-white/20 text-white'
-                            : 'bg-slate-50 border-slate-100 text-slate-600 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300'
+                          ? 'bg-white/20 border-white/20 text-white'
+                          : 'bg-slate-50 border-slate-100 text-slate-600 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300'
                           }`}>
                           {appt.patientName?.charAt(0)}
                         </div>
@@ -400,16 +369,16 @@ export default function DoctorDashboardPage() {
 
                       <div className="flex items-center justify-between mt-6">
                         <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md ${appt.status === 'confirmed'
-                            ? 'bg-emerald-500/10 text-emerald-500'
-                            : 'bg-amber-500/10 text-amber-500'
+                          ? 'bg-emerald-500/10 text-emerald-500'
+                          : 'bg-amber-500/10 text-amber-500'
                           }`}>
                           {appt.status}
                         </span>
                         <Button
                           size="sm"
                           className={`h-9 px-4 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 ${isNext
-                              ? 'bg-white hover:bg-teal-50 text-teal-700 shadow-lg shadow-black/10'
-                              : 'bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'
+                            ? 'bg-white hover:bg-teal-50 text-teal-700 shadow-lg shadow-black/10'
+                            : 'bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'
                             }`}
                         >
                           Add Prescription <Plus className="ml-1.5 h-3 w-3" strokeWidth={3} />

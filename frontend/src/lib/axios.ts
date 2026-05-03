@@ -14,7 +14,7 @@ api.interceptors.request.use((config) => {
         config.headers.set("Authorization", `Bearer ${token}`);
       } else {
         const existing = (config.headers ?? {}) as Record<string, string>;
-        const headers = new AxiosHeaders(existing as any);
+        const headers = new AxiosHeaders(existing);
         headers.set("Authorization", `Bearer ${token}`);
         config.headers = headers;
       }

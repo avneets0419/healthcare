@@ -14,7 +14,7 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 // Example static links. We can pass different lists based on roles (Patient, Doctor, Admin)
 const items = {
@@ -34,14 +34,23 @@ const items = {
     { title: "Dashboard", url: "/patient/dashboard", icon: LayoutDashboard },
     { title: "Doctors", url: "/patient/doctors", icon: Users },
     { title: "Appointments", url: "/patient/appointments", icon: Calendar },
-    { title: "Medical History", url: "/patient/history", icon: FileText },
-    { title: "Profile", url: "/patient/profile", icon: Settings },
+    // { title: "Medical History", url: "/patient/history", icon: FileText },
+    // { title: "Profile", url: "/patient/profile", icon: Settings },
   ],
 };
 
 export function AppSidebar({ role }: { role: "admin" | "doctor" | "patient" }) {
   const pathname = usePathname();
   const currentItems = items[role] || items.patient;
+  const router = useRouter();
+
+  const handleLogout = () => {
+
+    localStorage.removeItem("token"); // remove token
+
+    router.push("/auth/login");       // redirect
+
+  };
 
   return (
     <Sidebar className="border-r border-emerald-100/50 dark:border-slate-800 bg-[#f8fcfb] dark:bg-slate-950">
@@ -83,7 +92,20 @@ export function AppSidebar({ role }: { role: "admin" | "doctor" | "patient" }) {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter className="p-4 border-t border-sidebar-border">
-        {/* We can place user profile/settings shorthand here if needed */}
+
+
+        <button
+
+          onClick={handleLogout}
+
+          className="w-full font-semibold rounded-lg bg-red-400 px-4 py-2 text-white hover:bg-red-500 transition"
+
+        >
+
+          Logout
+
+        </button>
+
       </SidebarFooter>
     </Sidebar>
   );

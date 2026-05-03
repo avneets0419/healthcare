@@ -1,20 +1,14 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Star } from "lucide-react";
+import type { PatientDoctor } from "@/services/patient/doctor.service";
 
-export interface PatientDoctor {
-  id: string;
-  name: string;
-  specialization: string;
-  rating?: number;
-  isAvailable: boolean;
-  image?: string;
-}
+// Re-export so any file that imports PatientDoctor from DoctorCard still works
+export type { PatientDoctor };
 
 interface DoctorCardProps {
   doctor: PatientDoctor;
-  onBook: (doctor: PatientDoctor) => void;
+  onBook: (doctor: PatientDoctor) => void | Promise<void>;
 }
 
 export function DoctorCard({ doctor, onBook }: DoctorCardProps) {
@@ -36,13 +30,11 @@ export function DoctorCard({ doctor, onBook }: DoctorCardProps) {
             {doctor.specialization}
           </span>
           <div className="mt-2 flex items-center gap-3">
-            <div className="flex items-center gap-1 text-amber-500">
-              <Star className="h-3 w-3 fill-current" />
-              <span className="text-xs font-bold">{doctor.rating?.toFixed(1) || "4.8"}</span>
-            </div>
             <div className="flex items-center gap-1.5">
               <span className="relative flex h-2 w-2">
-                {doctor.isAvailable && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>}
+                {doctor.isAvailable && (
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                )}
                 <span className={`relative inline-flex rounded-full h-2 w-2 ${doctor.isAvailable ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"}`}></span>
               </span>
               <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest">

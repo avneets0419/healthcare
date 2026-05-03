@@ -1,48 +1,35 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import api from "@/lib/axios";
-import { PatientDoctor, DoctorCard } from "@/components/patient/DoctorCard";
+import { DoctorCard } from "@/components/patient/DoctorCard";
 import { BookingModal } from "@/components/patient/BookingModal";
 import { Input } from "@/components/ui/input";
 import { Search, Loader2, Users } from "lucide-react";
-
-// Fallback data in case the API is empty or unavailable
-const MOCK_DOCTORS: PatientDoctor[] = [
-  { id: "d1", name: "Dr. Sarah Smith", specialization: "Cardiologist", isAvailable: true, rating: 4.9 },
-  { id: "d2", name: "Dr. John Doe", specialization: "Dentist", isAvailable: true, rating: 4.7 },
-  { id: "d3", name: "Dr. Emily Chen", specialization: "Neurologist", isAvailable: false, rating: 4.8 },
-  { id: "d4", name: "Dr. Michael Brown", specialization: "General", isAvailable: true, rating: 4.6 },
-  { id: "d5", name: "Dr. Jessica Wilson", specialization: "Cardiologist", isAvailable: true, rating: 5.0 },
-];
+import {
+  patientDoctorService,
+  PatientDoctor,
+  DoctorSlot,
+} from "@/services/patient/doctor.service";
 
 export default function DoctorsPage() {
   const [doctors, setDoctors] = useState<PatientDoctor[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState("All");
-  
+
   const [selectedDoctor, setSelectedDoctor] = useState<PatientDoctor | null>(null);
+  const [slots, setSlots] = useState<DoctorSlot[]>([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
 
   const fetchDoctors = useCallback(async () => {
     setLoading(true);
     try {
-      const { data } = await api.get("/admin/doctors");
-      if (Array.isArray(data) && data.length > 0) {
-        setDoctors(data.map((d: { id: string; name: string; specialization: string; status: string; image?: string }) => ({
-          id: d.id,
-          name: d.name,
-          specialization: d.specialization,
-          isAvailable: d.status === "Active",
-          rating: 4.5 + Math.random() * 0.5,
-          image: d.image
-        })));
-      } else {
-        setDoctors(MOCK_DOCTORS);
-      }
-    } catch {
-      setDoctors(MOCK_DOCTORS);
+      const data = await patientDoctorService.getDoctors();
+      setDoctors(data);
+    } catch (err) {
+      console.error("Failed to fetch doctors:", err);
+      setDoctors([]);
     } finally {
       setLoading(false);
     }
@@ -52,24 +39,38 @@ export default function DoctorsPage() {
     fetchDoctors();
   }, [fetchDoctors]);
 
-  const handleBookClick = (doctor: PatientDoctor) => {
+  const handleBookClick = async (doctor: PatientDoctor) => {
     setSelectedDoctor(doctor);
+    setSlots([]);
     setModalOpen(true);
+    setSlotsLoading(true);
+    try {
+      const available = await patientDoctorService.getAvailableSlots(doctor.id);
+      setSlots(available);
+    } catch (err) {
+      console.error("Failed to fetch slots:", err);
+      setSlots([]);
+    } finally {
+      setSlotsLoading(false);
+    }
   };
 
-  const handleConfirmBooking = async (slot: string) => {
-    // Simulate booking API call
-    return new Promise<void>((resolve) => {
-      setTimeout(() => {
-        resolve();
-      }, 1000);
+  const handleConfirmBooking = async (slot: DoctorSlot) => {
+    if (!selectedDoctor) return;
+    await patientDoctorService.bookAppointment({
+      doctorId: selectedDoctor.id,
+      slotId: slot.id,
     });
+    // Refresh availability flag on the cards after booking
+    fetchDoctors();
   };
 
-  const specializations = ["All", ...Array.from(new Set(doctors.map(d => d.specialization)))];
+  const specializations = ["All", ...Array.from(new Set(doctors.map((d) => d.specialization)))];
 
   const filtered = doctors.filter((d) => {
-    const matchesSearch = d.name.toLowerCase().includes(search.toLowerCase()) || d.specialization.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch =
+      d.name.toLowerCase().includes(search.toLowerCase()) ||
+      d.specialization.toLowerCase().includes(search.toLowerCase());
     const matchesFilter = activeFilter === "All" || d.specialization === activeFilter;
     return matchesSearch && matchesFilter;
   });
@@ -105,11 +106,10 @@ export default function DoctorsPage() {
           <button
             key={spec}
             onClick={() => setActiveFilter(spec)}
-            className={`whitespace-nowrap px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-widest transition-all duration-300 border ${
-              activeFilter === spec
+            className={`whitespace-nowrap px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-widest transition-all duration-300 border ${activeFilter === spec
                 ? "bg-slate-900 text-white border-slate-900 shadow-lg shadow-slate-900/20 dark:bg-white dark:text-slate-900 dark:border-white"
                 : "bg-white text-slate-500 border-slate-200 hover:border-slate-300 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800"
-            }`}
+              }`}
           >
             {spec}
           </button>
@@ -142,6 +142,8 @@ export default function DoctorsPage() {
         open={modalOpen}
         onOpenChange={setModalOpen}
         doctor={selectedDoctor}
+        slots={slots}
+        slotsLoading={slotsLoading}
         onConfirm={handleConfirmBooking}
       />
     </div>

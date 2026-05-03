@@ -11,5 +11,6 @@ router.use(authMiddleware, roleMiddleware(["patient"]));
 router.get("/me", getMyPatientProfile);
 router.put("/me", updateMyPatientProfile);
 router.get("/dashboard", patientDashboardController.getDashboard);
+
 export { router as patientRouter };
 
