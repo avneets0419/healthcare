@@ -1,173 +1,322 @@
 import { Request, Response } from "express";
-import { prisma } from "../lib/prisma";
+import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
 
-export const getAllAppointments = async (req: Request, res: Response) => {
-    try {
-        const { search = "", status = "" } = req.query;
-        
-        const whereClause: any = {};
-        
-        if (status) {
-            whereClause.status = status;
+
+declare global {
+    var __prismaInstance: PrismaClient | undefined;
+}
+
+class PrismaClientSingleton {
+    private static instance: PrismaClient;
+
+    private constructor() { }                // Prevents direct instantiation
+
+    static getInstance(): PrismaClient {
+        if (!PrismaClientSingleton.instance) {
+            // Reuse the global reference that survives Next.js / ts-node hot-reloads
+            if (global.__prismaInstance) {
+                PrismaClientSingleton.instance = global.__prismaInstance;
+            } else {
+                PrismaClientSingleton.instance = PrismaClientSingleton.create();
+                if (process.env.NODE_ENV !== "production") {
+                    global.__prismaInstance = PrismaClientSingleton.instance;
+                }
+            }
+        }
+        return PrismaClientSingleton.instance;
+    }
+
+    private static create(): PrismaClient {
+        const connectionString = process.env.DATABASE_URL;
+        if (!connectionString) {
+            throw new Error("DATABASE_URL environment variable is not set");
+        }
+        const pool = new Pool({ connectionString, ssl: true });
+        const adapter = new PrismaPg(pool);
+        return new PrismaClient({
+            adapter,
+            log:
+                process.env.NODE_ENV === "development"
+                    ? ["query", "error", "warn"]
+                    : ["error"],
+        });
+    }
+}
+
+
+const db = PrismaClientSingleton.getInstance();
+
+
+interface AppointmentFilters {
+    search?: string;
+    status?: string;
+}
+
+interface CreateAppointmentData {
+    patientId: string;
+    doctorId: string;
+    type: string;
+    time: string;           // ISO string
+    price?: number | string;
+    notes?: string;
+}
+
+interface UpdateStatusData {
+    status: string;
+}
+
+interface RescheduleData {
+    time: string;
+}
+
+
+class AvailabilitySlotService {
+    constructor(private readonly client: PrismaClient) { }
+    async markBooked(doctorId: string, isoTime: string): Promise<void> {
+        const [date, startTime] = isoTime.split("T");
+        if (!date || !startTime) return;
+
+        await this.client.availabilitySlot.updateMany({
+            where: { doctorId, date, startTime, isBooked: false },
+            data: { isBooked: true },
+        });
+    }
+
+    async markFree(doctorId: string, isoTime: string): Promise<void> {
+        if (!isoTime.includes("T")) return;
+        const [date, startTime] = isoTime.split("T");
+
+        await this.client.availabilitySlot.updateMany({
+            where: { doctorId, date, startTime },
+            data: { isBooked: false },
+        });
+    }
+}
+
+class AppointmentRepository {
+    private readonly slotService: AvailabilitySlotService;
+
+    constructor(private readonly client: PrismaClient) {
+        this.slotService = new AvailabilitySlotService(client);
+    }
+
+    async findAll(filters: AppointmentFilters) {
+        const whereClause: Record<string, unknown> = {};
+
+        if (filters.status) {
+            whereClause.status = filters.status;
         }
 
-        if (search) {
+        if (filters.search) {
             whereClause.OR = [
-                { patientName: { contains: String(search), mode: 'insensitive' } },
-                { id: { contains: String(search), mode: 'insensitive' } },
-                { doctor: { name: { contains: String(search), mode: 'insensitive' } } }
+                { patientName: { contains: filters.search, mode: "insensitive" } },
+                { id: { contains: filters.search, mode: "insensitive" } },
+                { doctor: { name: { contains: filters.search, mode: "insensitive" } } },
             ];
         }
 
-        const appointments = await prisma.appointment.findMany({
+        return this.client.appointment.findMany({
             where: whereClause,
-            include: {
-                doctor: true,
-                patient: true
-            },
-            orderBy: {
-                createdAt: 'desc'
-            }
+            include: { doctor: true, patient: true },
+            orderBy: { createdAt: "desc" },
         });
-
-        res.status(200).json(appointments);
-    } catch (error: any) {
-        res.status(500).json({ message: error.message });
     }
-};
 
-export const createAppointment = async (req: Request, res: Response) => {
-    try {
-        const { patientId, doctorId, type, time, price, notes } = req.body;
+    async create(data: CreateAppointmentData) {
+        const patient = await this.client.patient.findUnique({
+            where: { id: data.patientId },
+        });
+        if (!patient) throw new NotFoundError("Patient not found");
 
-        if (!patientId || !doctorId || !type || !time) {
-            return res.status(400).json({ message: "Missing required fields" });
-        }
+        const doctor = await this.client.doctor.findUnique({
+            where: { id: data.doctorId },
+        });
+        if (!doctor) throw new NotFoundError("Doctor not found");
 
-        const patient = await prisma.patient.findUnique({ where: { id: patientId } });
-        if (!patient) return res.status(404).json({ message: "Patient not found" });
-
-        const doctor = await prisma.doctor.findUnique({ where: { id: doctorId } });
-        if (!doctor) return res.status(404).json({ message: "Doctor not found" });
-
-        const appointment = await prisma.appointment.create({
+        const appointment = await this.client.appointment.create({
             data: {
-                patientId,
+                patientId: data.patientId,
                 patientName: patient.name,
-                doctorId,
-                type,
-                time, // Expected format: ISO string or readable string
+                doctorId: data.doctorId,
+                type: data.type,
+                time: data.time,
                 status: "Scheduled",
-                price: price ? parseFloat(price) : 0,
-                notes
+                price: data.price ? parseFloat(String(data.price)) : 0,
+                notes: data.notes,
             },
-            include: {
-                doctor: true,
-                patient: true
-            }
+            include: { doctor: true, patient: true },
         });
 
-        // ✅ Mark availability slot as booked to prevent conflicts
+        // Non-critical — failure must not roll back the appointment
         try {
-            const [datePart, timePart] = time.split('T');
-            if (datePart && timePart) {
-                await prisma.availabilitySlot.updateMany({
-                    where: {
-                        doctorId,
-                        date: datePart,
-                        startTime: timePart,
-                        isBooked: false
-                    },
-                    data: {
-                        isBooked: true
-                    }
-                });
-            }
+            await this.slotService.markBooked(data.doctorId, data.time);
         } catch (err) {
             console.error("Failed to mark slot as booked:", err);
-            // Non-critical error, we still created the appointment
         }
 
-        res.status(201).json(appointment);
-    } catch (error: any) {
-        res.status(500).json({ message: error.message });
+        return appointment;
     }
-};
 
-export const updateAppointmentStatus = async (req: Request, res: Response) => {
-    try {
-        const { id } = req.params;
-        const { status } = req.body;
-
-        const appointment = await prisma.appointment.update({
+    async updateStatus(id: string, data: UpdateStatusData) {
+        return this.client.appointment.update({
             where: { id },
-            data: { status },
-            include: {
-                doctor: true,
-                patient: true
-            }
+            data: { status: data.status },
+            include: { doctor: true, patient: true },
         });
-
-        res.status(200).json(appointment);
-    } catch (error: any) {
-        res.status(500).json({ message: error.message });
     }
-};
 
-export const deleteAppointment = async (req: Request, res: Response) => {
-    try {
-        const { id } = req.params;
-        
-        // Find appointment to free up slot
-        const appt = await prisma.appointment.findUnique({ where: { id } });
-        if (appt && appt.doctorId && appt.time.includes('T')) {
-            const [d, t] = appt.time.split('T');
-            await prisma.availabilitySlot.updateMany({
-                where: { doctorId: appt.doctorId, date: d, startTime: t },
-                data: { isBooked: false }
-            });
+    async delete(id: string): Promise<void> {
+        const appt = await this.client.appointment.findUnique({ where: { id } });
+
+        if (appt?.doctorId) {
+            await this.slotService.markFree(appt.doctorId, appt.time);
         }
 
-        await prisma.appointment.delete({ where: { id } });
-        res.status(204).send();
-    } catch (error: any) {
-        res.status(500).json({ message: error.message });
+        await this.client.appointment.delete({ where: { id } });
     }
-};
 
-export const rescheduleAppointment = async (req: Request, res: Response) => {
-    try {
-        const { id } = req.params;
-        const { time } = req.body;
+    async reschedule(id: string, data: RescheduleData) {
+        const existing = await this.client.appointment.findUnique({ where: { id } });
+        if (!existing) throw new NotFoundError("Appointment not found");
 
-        const oldAppt = await prisma.appointment.findUnique({ where: { id } });
-        if (!oldAppt) return res.status(404).json({ message: "Appointment not found" });
-
-        // 1. Free up old slot
-        if (oldAppt.doctorId && oldAppt.time.includes('T')) {
-            const [d, t] = oldAppt.time.split('T');
-            await prisma.availabilitySlot.updateMany({
-                where: { doctorId: oldAppt.doctorId, date: d, startTime: t },
-                data: { isBooked: false }
-            });
+        // Free the old slot
+        if (existing.doctorId) {
+            await this.slotService.markFree(existing.doctorId, existing.time);
         }
 
-        // 2. Update appointment
-        const updated = await prisma.appointment.update({
+        // Persist the new time
+        const updated = await this.client.appointment.update({
             where: { id },
-            data: { time, status: "Scheduled" },
-            include: { doctor: true, patient: true }
+            data: { time: data.time, status: "Scheduled" },
+            include: { doctor: true, patient: true },
         });
 
-        // 3. Mark new slot as booked
-        const [newD, newT] = time.split('T');
-        await prisma.availabilitySlot.updateMany({
-            where: { doctorId: updated.doctorId!, date: newD, startTime: newT },
-            data: { isBooked: true }
-        });
+        // Claim the new slot
+        if (updated.doctorId) {
+            await this.slotService.markBooked(updated.doctorId, data.time);
+        }
 
-        res.status(200).json(updated);
-    } catch (error: any) {
-        res.status(500).json({ message: error.message });
+        return updated;
     }
-};
+}
+
+class NotFoundError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = "NotFoundError";
+    }
+}
+
+class ValidationError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = "ValidationError";
+    }
+}
+
+class AppointmentService {
+    constructor(private readonly repo: AppointmentRepository) { }
+
+    getAll(filters: AppointmentFilters) {
+        return this.repo.findAll(filters);
+    }
+
+    create(data: CreateAppointmentData) {
+        if (!data.patientId || !data.doctorId || !data.type || !data.time) {
+            throw new ValidationError("Missing required fields");
+        }
+        return this.repo.create(data);
+    }
+
+    updateStatus(id: string, data: UpdateStatusData) {
+        if (!data.status) throw new ValidationError("Status is required");
+        return this.repo.updateStatus(id, data);
+    }
+
+    delete(id: string) {
+        return this.repo.delete(id);
+    }
+
+    reschedule(id: string, data: RescheduleData) {
+        if (!data.time) throw new ValidationError("New time is required");
+        return this.repo.reschedule(id, data);
+    }
+}
+
+
+class AppointmentController {
+    constructor(private readonly service: AppointmentService) { }
+
+    getAll = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const { search = "", status = "" } = req.query as Record<string, string>;
+            const data = await this.service.getAll({ search, status });
+            res.status(200).json(data);
+        } catch (err) {
+            this.handleError(err, res);
+        }
+    };
+
+    create = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const appointment = await this.service.create(req.body as CreateAppointmentData);
+            res.status(201).json(appointment);
+        } catch (err) {
+            this.handleError(err, res);
+        }
+    };
+
+    updateStatus = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const { id } = req.params;
+            const appointment = await this.service.updateStatus(id, req.body as UpdateStatusData);
+            res.status(200).json(appointment);
+        } catch (err) {
+            this.handleError(err, res);
+        }
+    };
+
+    delete = async (req: Request, res: Response): Promise<void> => {
+        try {
+            await this.service.delete(req.params.id);
+            res.status(204).send();
+        } catch (err) {
+            this.handleError(err, res);
+        }
+    };
+
+    reschedule = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const { id } = req.params;
+            const appointment = await this.service.reschedule(id, req.body as RescheduleData);
+            res.status(200).json(appointment);
+        } catch (err) {
+            this.handleError(err, res);
+        }
+    };
+
+    private handleError(err: unknown, res: Response): void {
+        if (err instanceof ValidationError) {
+            res.status(400).json({ message: err.message });
+            return;
+        }
+        if (err instanceof NotFoundError) {
+            res.status(404).json({ message: err.message });
+            return;
+        }
+        const message = err instanceof Error ? err.message : "Internal server error";
+        res.status(500).json({ message });
+    }
+}
+
+const repository = new AppointmentRepository(db);
+const service = new AppointmentService(repository);
+const controller = new AppointmentController(service);
+
+export const getAllAppointments = controller.getAll;
+export const createAppointment = controller.create;
+export const updateAppointmentStatus = controller.updateStatus;
+export const deleteAppointment = controller.delete;
+export const rescheduleAppointment = controller.reschedule;
