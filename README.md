@@ -31,7 +31,7 @@ Mediso is a full-stack Smart Hospital Management System designed to streamline h
 * **Tools:** Git, GitHub, Prisma Migrations, ESLint
 
 ## Project Structure
-\`\`\`text
+```
 healthcare/
 ├── backend/
 │   ├── prisma/
@@ -52,13 +52,13 @@ healthcare/
 │       ├── lib/
 │       └── types/
 └── diagrams/
-\`\`\`
+```
 
 ## Setup and Installation
 
 ### Prerequisites
 * Node.js 18 or higher
-* npm or yarn
+* npm
 * PostgreSQL database (local or cloud)
 
 ### Backend Setup
