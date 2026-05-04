@@ -217,13 +217,13 @@ export default function AdminPatientsPage() {
                     <h4 className="font-bold text-slate-900 dark:text-white truncate group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
                       {patient.name}
                     </h4>
-                    <div className="flex items-center gap-3 mt-1 text-xs font-medium text-slate-400">
+                    {/* <div className="flex items-center gap-3 mt-1 text-xs font-medium text-slate-400">
                       <span>#{patient.patientId || "N/A"}</span>
                       <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
                       <span>{patient.age || "?"} yrs</span>
                       <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
                       <span>{patient.gender || "Not specified"}</span>
-                    </div>
+                    </div> */}
                   </div>
                 </div>
 
@@ -239,12 +239,12 @@ export default function AdminPatientsPage() {
 
                 <div className="col-span-2 w-full lg:w-auto">
                   <span className={`inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold tracking-wide uppercase shadow-sm ${patient.status?.toLowerCase() === "active"
-                      ? "bg-emerald-100/80 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50"
-                      : patient.status?.toLowerCase() === "recovered"
-                        ? "bg-teal-50 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400 border border-teal-200 dark:border-teal-800/50"
-                        : patient.status?.toLowerCase() === "under_treatment"
-                          ? "bg-amber-100/80 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50"
-                          : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700"
+                    ? "bg-emerald-100/80 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50"
+                    : patient.status?.toLowerCase() === "recovered"
+                      ? "bg-teal-50 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400 border border-teal-200 dark:border-teal-800/50"
+                      : patient.status?.toLowerCase() === "under_treatment"
+                        ? "bg-amber-100/80 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50"
+                        : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700"
                     }`}>
                     {patient.status?.toLowerCase() === "active" && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2 animate-pulse" />}
                     {patient.status?.toLowerCase() === "under_treatment" && <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-2" />}
