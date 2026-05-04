@@ -77,7 +77,7 @@ export default function PatientDashboardPage() {
 
   return (
     <AuthGuard allowedRoles={["patient"]}>
-      <div className="space-y-8 animate-in fade-in duration-500 max-w-[1400px] mx-auto pb-12">
+      <div className="space-y-8 animate-in fade-in duration-500 max-w-350 mx-auto pb-12">
         {/* 1. Page Header */}
         <div className="relative">
           <div className="absolute -left-4 -top-4 w-16 h-16 bg-blue-400/10 rounded-full blur-2xl pointer-events-none" />

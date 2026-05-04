@@ -374,15 +374,7 @@ export default function DoctorDashboardPage() {
                           }`}>
                           {appt.status}
                         </span>
-                        <Button
-                          size="sm"
-                          className={`h-9 px-4 rounded-xl font-semibold text-[10px] uppercase tracking-widest transition-all active:scale-95 ${isNext
-                            ? 'bg-white hover:bg-teal-50 text-teal-700 shadow-lg shadow-black/10'
-                            : 'bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'
-                            }`}
-                        >
-                          Add Prescription <Plus className="ml-1.5 h-3 w-3" strokeWidth={3} />
-                        </Button>
+
                       </div>
                     </div>
                   );

@@ -158,6 +158,13 @@ export class DoctorService {
 
   async getStats(email: string) {
     const doctorId = (await this.resolveDoctorByEmail(email)).id;
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const endOfToday = new Date();
+    endOfToday.setHours(23, 59, 59, 999);
+
+
 
     const [totalAppointments, todayAppointments, pendingPrescriptions, totalPatients] = await Promise.all([
       prisma.appointment.count({ where: { doctorId } }),
@@ -165,8 +172,8 @@ export class DoctorService {
         where: {
           doctorId,
           timeSlot: {
-            gte: new Date(new Date().setHours(0, 0, 0, 0)),
-            lt: new Date(new Date().setHours(24, 0, 0, 0)),
+            gte: startOfToday,
+            lt: endOfToday,
           },
         },
       }),
