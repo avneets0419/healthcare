@@ -67,9 +67,9 @@ export function RescheduleModal({
       fetchSlots(appointment.doctorId);
       // Pre-fill with current appointment date/time if possible
       if (appointment.time && appointment.time.includes('T')) {
-          const [d, t] = appointment.time.split('T');
-          setValue("date", d);
-          // Don't auto-set time to allow fresh slot selection
+        const [d, t] = appointment.time.split('T');
+        setValue("date", d);
+        // Don't auto-set time to allow fresh slot selection
       }
     }
   }, [isOpen, appointment]);
@@ -86,9 +86,9 @@ export function RescheduleModal({
     }
   };
 
-  const availableTimesForDate = availabilitySlots.filter(s => 
-    s.date === selectedDate && 
-    s.status === "available" && 
+  const availableTimesForDate = availabilitySlots.filter(s =>
+    s.date === selectedDate &&
+    s.status === "available" &&
     (!s.isBooked || (appointment && appointment.time === `${s.date}T${s.startTime}`))
   );
 
@@ -119,10 +119,10 @@ export function RescheduleModal({
               <CalendarIcon className="h-7 w-7" />
             </div>
             <div>
-              <DialogTitle className="text-2xl font-black text-white tracking-tight">
+              <DialogTitle className="text-2xl font-semibold text-white tracking-tight">
                 Reschedule
               </DialogTitle>
-              <p className="text-[9px] font-black text-emerald-50/80 uppercase tracking-[0.25em] mt-1">
+              <p className="text-[9px] font-semibold text-emerald-50/80 uppercase tracking-[0.25em] mt-1">
                 Moving {appointment.patientName}'s Slot
               </p>
             </div>
@@ -131,18 +131,18 @@ export function RescheduleModal({
 
         <form onSubmit={handleSubmit(onSubmit)} className="px-10 py-8 space-y-6">
           <div className="bg-white dark:bg-slate-800/50 p-4 rounded-2xl border border-emerald-100 dark:border-emerald-900/30 flex items-center gap-4">
-              <div className="h-10 w-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center">
-                  <User className="h-5 w-5 text-emerald-600" />
-              </div>
-              <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Specialist</p>
-                  <p className="font-bold text-slate-700 dark:text-slate-200">{appointment.doctorName}</p>
-              </div>
+            <div className="h-10 w-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center">
+              <User className="h-5 w-5 text-emerald-600" />
+            </div>
+            <div>
+              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Specialist</p>
+              <p className="font-bold text-slate-700 dark:text-slate-200">{appointment.doctorName}</p>
+            </div>
           </div>
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
+              <Label className="text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
                 <CalendarIcon className="h-2.5 w-2.5" /> 1. Select New Date
               </Label>
               <Input
@@ -154,7 +154,7 @@ export function RescheduleModal({
             </div>
 
             <div className="space-y-2">
-              <Label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
+              <Label className="text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
                 <Clock className="h-2.5 w-2.5" /> 2. Choose New Time
               </Label>
               {fetchingSlots ? (
@@ -179,7 +179,7 @@ export function RescheduleModal({
                         key={slot.id}
                         type="button"
                         onClick={() => setValue("time", slot.startTime)}
-                        className={`px-4 py-2 rounded-xl text-[10px] font-black transition-all border-2 ${selectedTime === slot.startTime ? "bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-500/20" : isCurrent ? "bg-amber-50 border-amber-200 text-amber-700" : "bg-white border-slate-100 text-slate-600 hover:border-emerald-200"}`}
+                        className={`px-4 py-2 rounded-xl text-[10px] font-semibold transition-all border-2 ${selectedTime === slot.startTime ? "bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-500/20" : isCurrent ? "bg-amber-50 border-amber-200 text-amber-700" : "bg-white border-slate-100 text-slate-600 hover:border-emerald-200"}`}
                       >
                         {slot.startTime} {isCurrent && "(Current)"}
                       </button>
@@ -192,8 +192,8 @@ export function RescheduleModal({
           </div>
 
           <DialogFooter className="pt-4 flex items-center gap-4">
-            <Button type="button" variant="ghost" onClick={onClose} className="h-12 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest text-slate-400">Cancel</Button>
-            <Button type="submit" disabled={loading || !selectedTime} className="h-12 px-8 flex-1 rounded-2xl bg-emerald-600 text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-emerald-500/20 active:scale-95 transition-all">
+            <Button type="button" variant="ghost" onClick={onClose} className="h-12 px-6 rounded-xl font-semibold text-[10px] uppercase tracking-widest text-slate-400">Cancel</Button>
+            <Button type="submit" disabled={loading || !selectedTime} className="h-12 px-8 flex-1 rounded-2xl bg-emerald-600 text-white font-semibold text-xs uppercase tracking-widest shadow-xl shadow-emerald-500/20 active:scale-95 transition-all">
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <span className="flex items-center gap-2">Update Schedule <ArrowRight className="h-4 w-4" /></span>}
             </Button>
           </DialogFooter>

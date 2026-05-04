@@ -9,14 +9,15 @@ class PatientDashboardController {
 
   getDashboard = async (req: Request, res: Response): Promise<void> => {
     try {
-      const patientId = (req as any).user?.id as string;
+      // JWT contains { id, email, name, role } — use email to resolve Patient row
+      const patientEmail = (req as any).user?.email as string;
 
-      if (!patientId) {
+      if (!patientEmail) {
         res.status(401).json({ message: "Unauthorized: patient identity missing" });
         return;
       }
 
-      const dashboard = await this.service.getDashboard(patientId);
+      const dashboard = await this.service.getDashboard(patientEmail);
       res.status(200).json(dashboard);
     } catch (error) {
       console.error("Patient Dashboard Error:", error);

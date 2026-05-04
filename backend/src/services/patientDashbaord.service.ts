@@ -10,45 +10,51 @@ import {
 import { Appointment } from "@prisma/client";
 
 export interface IPatientDashboardService {
-  getDashboard(patientId: string): Promise<PatientDashboardDTO>;
+  getDashboard(patientEmail: string): Promise<PatientDashboardDTO>;
 }
 
 function toAppointmentDTO(
-  appt: Appointment & { doctor: { name: string } | null }
+  appt: Appointment & {
+    doctor: { name: string; specialization: string; image: string } | null;
+  }
 ): PatientAppointmentDTO {
   return {
     id: appt.id,
     patientId: appt.patientId,
     patientName: appt.patientName,
     doctorId: appt.doctorId,
-    doctorName: appt.doctor?.name ?? "Unknown",
-    timeSlot: appt.time,
+    type: appt.type,
+    time: appt.time,
     status: appt.status,
+    timeSlot: appt.timeSlot ? appt.timeSlot.toISOString() : null,
+    notes: appt.notes,
+    createdAt: appt.createdAt.toISOString(),
+    price: appt.price,
+    doctor: appt.doctor ?? null,
   };
 }
 
 class PatientDashboardService implements IPatientDashboardService {
   constructor(private readonly repo: IPatientDashboardRepository) {}
 
-  async getDashboard(patientId: string): Promise<PatientDashboardDTO> {
-    const [
-  totalAppointments,
-  upcomingCount,
-  rawUpcoming,
-  totalPrescriptions,
-] = await Promise.all([
-  this.repo.countAppointmentsByPatient(patientId),
-  this.repo.countUpcomingByPatient(patientId),
-  this.repo.getUpcomingByPatient(patientId, 3),
-  this.repo.countPrescriptionsByPatient(patientId),
-]);
+  async getDashboard(patientEmail: string): Promise<PatientDashboardDTO> {
+    const patient = await this.repo.findPatientByEmail(patientEmail);
+    if (!patient) throw new Error("Patient not found");
 
-const stats: PatientDashboardStatsDTO = {
-  upcomingCount,
-  totalAppointments,
-  totalPrescriptions,
-  unreadNotifications: 0,
-}
+    const [totalAppointments, upcomingCount, rawUpcoming, totalPrescriptions] =
+      await Promise.all([
+        this.repo.countAppointmentsByPatient(patient.id),
+        this.repo.countUpcomingByPatient(patient.id),
+        this.repo.getUpcomingByPatient(patient.id, 3),
+        this.repo.countPrescriptionsByPatient(patient.id),
+      ]);
+
+    const stats: PatientDashboardStatsDTO = {
+      upcomingCount,
+      totalAppointments,
+      totalPrescriptions,
+      unreadNotifications: 0,
+    };
 
     return {
       stats,

@@ -137,7 +137,7 @@ export default function DoctorDashboardPage() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
           <div className="relative">
             <div className="absolute -left-4 -top-4 w-20 h-20 bg-teal-400/20 rounded-full blur-3xl pointer-events-none" />
-            <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-3 relative z-10">
+            <h1 className="text-4xl font-semibold tracking-tight text-slate-900 dark:text-white flex items-center gap-3 relative z-10">
               Doctor Workspace
             </h1>
             <p className="text-base text-slate-500 dark:text-slate-400 mt-2 font-medium max-w-xl relative z-10">
@@ -158,7 +158,7 @@ export default function DoctorDashboardPage() {
                         <div className={`w-4 h-4 bg-white rounded-full shadow-sm transition-transform duration-300 ${isActive ? 'translate-x-6' : 'translate-x-0'}`} />
                       </div>
                       <div className="flex flex-col">
-                        <span className={`text-xs font-black uppercase tracking-wider ${isActive ? 'text-emerald-600' : 'text-slate-500'}`}>
+                        <span className={`text-xs font-semibold uppercase tracking-wider ${isActive ? 'text-emerald-600' : 'text-slate-500'}`}>
                           {isActive ? 'Active' : 'Inactive'}
                         </span>
                         <span className="text-[10px] font-bold text-slate-400 leading-none">Status</span>
@@ -173,7 +173,7 @@ export default function DoctorDashboardPage() {
             </div>
 
             <div className="hidden lg:flex flex-col items-end">
-              <span className="text-xs font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Current Session</span>
+              <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest leading-none mb-1">Current Session</span>
               <span className="text-sm font-bold text-slate-900 dark:text-white">
                 {new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase()}
               </span>
@@ -200,7 +200,7 @@ export default function DoctorDashboardPage() {
                 </div>
               </div>
 
-              <span className="text-[10px] font-black uppercase tracking-widest text-teal-600 bg-teal-50 px-2.5 py-1 rounded-md">
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-teal-600 bg-teal-50 px-2.5 py-1 rounded-md">
                 Live
               </span>
             </div>
@@ -210,7 +210,7 @@ export default function DoctorDashboardPage() {
                 Today&apos;s Appointments
               </h3>
 
-              <p className="text-5xl font-black text-slate-900 dark:text-white tracking-tight mb-2">
+              <p className="text-5xl font-semibold text-slate-900 dark:text-white tracking-tight mb-2">
                 {stats?.todayAppointments ?? 0}
               </p>
 
@@ -234,7 +234,7 @@ export default function DoctorDashboardPage() {
             </div>
             <div className="relative z-10 flex flex-col items-center w-full mt-2">
               <h3 className="font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[10px] mb-2 text-center">Completed Appointments</h3>
-              <p className="text-5xl font-black text-slate-900 dark:text-white tracking-tight mb-2">
+              <p className="text-5xl font-semibold text-slate-900 dark:text-white tracking-tight mb-2">
                 {appointments.filter(a => a.status === 'completed').length}
               </p>
               <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-md uppercase tracking-widest">
@@ -259,7 +259,7 @@ export default function DoctorDashboardPage() {
             </div>
             <div className="relative z-10 flex flex-col items-center w-full mt-2">
               <h3 className="font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[10px] mb-2 text-center">Pending Prescriptions</h3>
-              <p className="text-5xl font-black text-slate-900 dark:text-white tracking-tight mb-2">
+              <p className="text-5xl font-semibold text-slate-900 dark:text-white tracking-tight mb-2">
                 {stats?.pendingPrescriptions ?? 0}
               </p>
               {(stats?.pendingPrescriptions ?? 0) > 0 ? (
@@ -287,7 +287,7 @@ export default function DoctorDashboardPage() {
             </div>
             <div className="relative z-10 flex flex-col items-center w-full mt-2">
               <h3 className="font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[10px] mb-2 text-center">Total Patients Seen</h3>
-              <p className="text-5xl font-black text-slate-900 dark:text-white tracking-tight mb-2">
+              <p className="text-5xl font-semibold text-slate-900 dark:text-white tracking-tight mb-2">
                 {stats?.totalPatients ?? 0}
               </p>
               <div className="flex -space-x-2 overflow-hidden">
@@ -305,11 +305,11 @@ export default function DoctorDashboardPage() {
           <div className="lg:col-span-8 bg-white dark:bg-slate-800/90 rounded-3xl border border-slate-200/60 dark:border-slate-700/50 p-8 flex flex-col shadow-lg shadow-slate-200/30 transition-all">
             <div className="flex justify-between items-start mb-8 pb-4 border-b border-slate-100 dark:border-slate-700/50">
               <div>
-                <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">Upcoming Appointments</h3>
+                <h3 className="text-xl font-semibold text-slate-900 dark:text-white tracking-tight">Upcoming Appointments</h3>
                 <p className="text-xs font-semibold text-slate-400 mt-1 uppercase tracking-wider">Scheduled for today</p>
               </div>
               <div className="flex items-center gap-2">
-                <span className="rounded-full bg-teal-100 dark:bg-teal-900/40 px-3 py-1 text-[10px] font-black text-teal-700 dark:text-teal-300 uppercase tracking-widest">
+                <span className="rounded-full bg-teal-100 dark:bg-teal-900/40 px-3 py-1 text-[10px] font-semibold text-teal-700 dark:text-teal-300 uppercase tracking-widest">
                   {todaysAppts.length} Appointments
                 </span>
                 <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-teal-600 rounded-full">
@@ -341,7 +341,7 @@ export default function DoctorDashboardPage() {
                     >
                       {isNext && (
                         <div className="absolute top-0 right-0 p-4">
-                          <span className="bg-teal-500 text-white text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full shadow-lg shadow-teal-500/30">
+                          <span className="bg-teal-500 text-white text-[9px] font-semibold uppercase tracking-widest px-2.5 py-1 rounded-full shadow-lg shadow-teal-500/30">
                             Next UP
                           </span>
                         </div>
@@ -355,7 +355,7 @@ export default function DoctorDashboardPage() {
                           {appt.patientName?.charAt(0)}
                         </div>
                         <div>
-                          <p className={`font-black text-base tracking-tight ${isNext ? 'text-white' : 'text-slate-900 dark:text-white'}`}>
+                          <p className={`font-semibold text-base tracking-tight ${isNext ? 'text-white' : 'text-slate-900 dark:text-white'}`}>
                             {appt.patientName}
                           </p>
                           <div className="flex items-center gap-2 mt-0.5">
@@ -368,7 +368,7 @@ export default function DoctorDashboardPage() {
                       </div>
 
                       <div className="flex items-center justify-between mt-6">
-                        <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md ${appt.status === 'confirmed'
+                        <span className={`text-[10px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded-md ${appt.status === 'confirmed'
                           ? 'bg-emerald-500/10 text-emerald-500'
                           : 'bg-amber-500/10 text-amber-500'
                           }`}>
@@ -376,7 +376,7 @@ export default function DoctorDashboardPage() {
                         </span>
                         <Button
                           size="sm"
-                          className={`h-9 px-4 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 ${isNext
+                          className={`h-9 px-4 rounded-xl font-semibold text-[10px] uppercase tracking-widest transition-all active:scale-95 ${isNext
                             ? 'bg-white hover:bg-teal-50 text-teal-700 shadow-lg shadow-black/10'
                             : 'bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'
                             }`}
@@ -397,7 +397,7 @@ export default function DoctorDashboardPage() {
               <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:rotate-12 transition-transform duration-700 pointer-events-none">
                 <Activity className="h-20 w-20 text-slate-900 dark:text-white" />
               </div>
-              <h4 className="text-slate-900 dark:text-white font-black text-xl mb-2 relative z-10">Quick Actions</h4>
+              <h4 className="text-slate-900 dark:text-white font-semibold text-xl mb-2 relative z-10">Quick Actions</h4>
               <p className="text-slate-400 dark:text-slate-500 text-xs font-semibold uppercase tracking-widest mb-8 relative z-10">Streamline your workflow</p>
 
               <div className="grid grid-cols-1 gap-3 relative z-10">

@@ -1,47 +1,51 @@
 import { prisma } from "../lib/prisma";
 import { Appointment } from "@prisma/client";
 
+type AppointmentWithDoctor = Appointment & {
+  doctor: { name: string; specialization: string; image: string } | null;
+};
+
 export interface IPatientDashboardRepository {
+  findPatientByEmail(email: string): Promise<{ id: string } | null>;
   countAppointmentsByPatient(patientId: string): Promise<number>;
   countUpcomingByPatient(patientId: string): Promise<number>;
-  getUpcomingByPatient(
-    patientId: string,
-    limit: number
-  ): Promise<(Appointment & { doctor: { name: string } | null })[]>;
+  getUpcomingByPatient(patientId: string, limit: number): Promise<AppointmentWithDoctor[]>;
   countPrescriptionsByPatient(patientId: string): Promise<number>;
 }
 
 class PatientDashboardRepository implements IPatientDashboardRepository {
-  async countAppointmentsByPatient(patientId: string): Promise<number> {
-    return prisma.appointment.count({
-      where: { patientId },
+  async findPatientByEmail(email: string): Promise<{ id: string } | null> {
+    return prisma.patient.findUnique({
+      where: { email },
+      select: { id: true },
     });
+  }
+
+  async countAppointmentsByPatient(patientId: string): Promise<number> {
+    return prisma.appointment.count({ where: { patientId } });
   }
 
   async countUpcomingByPatient(patientId: string): Promise<number> {
     return prisma.appointment.count({
-      where: { patientId, status: "upcoming" },
+      where: { patientId, status: { in: ["upcoming", "active"] } },
     });
   }
 
-  async getUpcomingByPatient(
-    patientId: string,
-    limit: number
-  ): Promise<(Appointment & { doctor: { name: string } | null })[]> {
+  async getUpcomingByPatient(patientId: string, limit: number): Promise<AppointmentWithDoctor[]> {
     return prisma.appointment.findMany({
-      where: { patientId, status: "upcoming" },
+      where: { patientId, status: { in: ["upcoming", "active"] } },
       orderBy: { createdAt: "asc" },
       take: limit,
       include: {
-        doctor: { select: { name: true } },
+        doctor: {
+          select: { name: true, specialization: true, image: true },
+        },
       },
     });
   }
 
   async countPrescriptionsByPatient(patientId: string): Promise<number> {
-    return prisma.prescription.count({
-      where: { patientId },
-    });
+    return prisma.prescription.count({ where: { patientId } });
   }
 }
 

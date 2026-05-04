@@ -70,7 +70,7 @@ export function ViewPatientModal({
           <div className="absolute -bottom-12 left-8">
             <div className="p-1.5 rounded-3xl bg-white dark:bg-slate-900 shadow-xl border border-slate-100 dark:border-slate-800">
               <div className="h-24 w-24 rounded-[22px] bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/50 dark:to-teal-900/50 flex items-center justify-center border-4 border-white dark:border-slate-900 overflow-hidden">
-                <span className="text-4xl font-black text-emerald-700 dark:text-emerald-400 tracking-tighter">
+                <span className="text-4xl font-semibold text-emerald-700 dark:text-emerald-400 tracking-tighter">
                   {patient.name.split(" ").map(n => n[0]).join("").substring(0, 2)}
                 </span>
               </div>
@@ -82,7 +82,7 @@ export function ViewPatientModal({
         <div className="px-8 pt-16 pb-8">
           <div className="flex items-center justify-between mb-8">
             <div className="space-y-1">
-              <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-none">
+              <h2 className="text-3xl font-semibold text-slate-900 dark:text-white tracking-tight leading-none">
                 {patient.name}
               </h2>
               <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-xs">
@@ -90,7 +90,7 @@ export function ViewPatientModal({
                 <span>Patient ID: {patient.patientId || "N/A"}</span>
               </div>
             </div>
-            <span className={`inline-flex items-center px-4 py-2 rounded-xl text-[10px] font-black tracking-widest uppercase shadow-sm border ${patient.status?.toLowerCase() === "active"
+            <span className={`inline-flex items-center px-4 py-2 rounded-xl text-[10px] font-semibold tracking-widest uppercase shadow-sm border ${patient.status?.toLowerCase() === "active"
               ? "bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800/50"
               : "bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800/50"
               }`}>

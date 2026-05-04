@@ -44,13 +44,7 @@ export function AppSidebar({ role }: { role: "admin" | "doctor" | "patient" }) {
   const currentItems = items[role] || items.patient;
   const router = useRouter();
 
-  const handleLogout = () => {
 
-    localStorage.removeItem("token"); // remove token
-
-    router.push("/auth/login");       // redirect
-
-  };
 
   return (
     <Sidebar className="border-r border-emerald-100/50 dark:border-slate-800 bg-[#f8fcfb] dark:bg-slate-950">
@@ -91,22 +85,7 @@ export function AppSidebar({ role }: { role: "admin" | "doctor" | "patient" }) {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="p-4 border-t border-sidebar-border">
 
-
-        <button
-
-          onClick={handleLogout}
-
-          className="w-full font-semibold rounded-lg bg-red-400 px-4 py-2 text-white hover:bg-red-500 transition"
-
-        >
-
-          Logout
-
-        </button>
-
-      </SidebarFooter>
     </Sidebar>
   );
 }

@@ -15,7 +15,7 @@ export function DoctorCard({ doctor, onBook }: DoctorCardProps) {
   return (
     <div className="group bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 flex flex-col gap-4 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 hover:border-emerald-400/30 backdrop-blur-sm relative overflow-hidden">
       <div className="flex items-start gap-4">
-        <div className="w-16 h-16 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center font-black text-xl text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-500 group-hover:border-emerald-100 dark:group-hover:bg-emerald-900/20 transition-colors shrink-0 overflow-hidden">
+        <div className="w-16 h-16 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center font-semibold text-xl text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-500 group-hover:border-emerald-100 dark:group-hover:bg-emerald-900/20 transition-colors shrink-0 overflow-hidden">
           {doctor.image ? (
             <img src={doctor.image} alt={doctor.name} className="w-full h-full object-cover" />
           ) : (
@@ -23,10 +23,10 @@ export function DoctorCard({ doctor, onBook }: DoctorCardProps) {
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-xl font-black text-slate-900 dark:text-white truncate tracking-tight mb-1">
+          <h3 className="text-xl font-semibold text-slate-900 dark:text-white truncate tracking-tight mb-1">
             {doctor.name}
           </h3>
-          <span className="inline-flex items-center px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 text-[10px] font-black uppercase tracking-widest">
+          <span className="inline-flex items-center px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 text-[10px] font-semibold uppercase tracking-widest">
             {doctor.specialization}
           </span>
           <div className="mt-2 flex items-center gap-3">

@@ -21,7 +21,7 @@ const MOCK_PROFILE: PatientProfile = {
 
 export default function ProfilePage() {
   const router = useRouter();
-  
+
   const [profile, setProfile] = useState<PatientProfile | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -117,7 +117,7 @@ export default function ProfilePage() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="relative">
             <div className="absolute -left-4 -top-4 w-16 h-16 bg-blue-400/10 rounded-full blur-2xl pointer-events-none" />
-            <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white relative z-10">
+            <h1 className="text-4xl font-semibold tracking-tight text-slate-900 dark:text-white relative z-10">
               My Profile
             </h1>
             <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-widest relative z-10">
@@ -125,7 +125,7 @@ export default function ProfilePage() {
             </p>
           </div>
 
-          <Button 
+          <Button
             onClick={handleLogout}
             variant="destructive"
             className="h-11 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-700 dark:bg-rose-900/30 dark:hover:bg-rose-900/50 dark:text-rose-400 font-bold uppercase tracking-widest text-xs px-6 transition-all"
@@ -145,10 +145,10 @@ export default function ProfilePage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
             {isEditing ? (
-              <EditProfileForm 
-                profile={profile} 
-                onSave={handleSaveProfile} 
-                onCancel={() => setIsEditing(false)} 
+              <EditProfileForm
+                profile={profile}
+                onSave={handleSaveProfile}
+                onCancel={() => setIsEditing(false)}
               />
             ) : (
               <ProfileCard profile={profile} onEdit={() => setIsEditing(true)} />
@@ -160,7 +160,7 @@ export default function ProfilePage() {
             <div className="bg-white dark:bg-slate-900/50 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
               <div className="flex items-center gap-2 mb-6">
                 <Lock className="h-5 w-5 text-slate-400" />
-                <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-white uppercase tracking-tight">
                   Security
                 </h2>
               </div>
@@ -178,33 +178,33 @@ export default function ProfilePage() {
 
               <form onSubmit={handleChangePassword} className="space-y-4">
                 <div>
-                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Old Password</label>
-                  <Input 
+                  <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-1.5">Old Password</label>
+                  <Input
                     type="password"
                     value={passwords.old}
-                    onChange={(e) => setPasswords({...passwords, old: e.target.value})}
-                    className="h-11 rounded-xl bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-sm" 
+                    onChange={(e) => setPasswords({ ...passwords, old: e.target.value })}
+                    className="h-11 rounded-xl bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">New Password</label>
-                  <Input 
+                  <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-1.5">New Password</label>
+                  <Input
                     type="password"
                     value={passwords.new}
-                    onChange={(e) => setPasswords({...passwords, new: e.target.value})}
-                    className="h-11 rounded-xl bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-sm" 
+                    onChange={(e) => setPasswords({ ...passwords, new: e.target.value })}
+                    className="h-11 rounded-xl bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Confirm Password</label>
-                  <Input 
+                  <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-1.5">Confirm Password</label>
+                  <Input
                     type="password"
                     value={passwords.confirm}
-                    onChange={(e) => setPasswords({...passwords, confirm: e.target.value})}
-                    className="h-11 rounded-xl bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-sm" 
+                    onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })}
+                    className="h-11 rounded-xl bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-sm"
                   />
                 </div>
-                <Button 
+                <Button
                   type="submit"
                   disabled={pwdLoading || !passwords.old || !passwords.new || !passwords.confirm}
                   className="w-full h-11 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 font-bold uppercase tracking-widest text-[10px]"

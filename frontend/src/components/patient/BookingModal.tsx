@@ -59,7 +59,7 @@ export function BookingModal({ open, onOpenChange, doctor, slots, slotsLoading, 
             <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 rounded-full flex items-center justify-center mb-2">
               <CheckCircle2 className="h-8 w-8" />
             </div>
-            <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Appointment booked successfully</h3>
+            <h3 className="text-2xl font-semibold text-slate-900 dark:text-white tracking-tight">Appointment booked successfully</h3>
             <p className="text-sm font-semibold text-slate-500 uppercase tracking-widest">
               You will receive a confirmation shortly.
             </p>
@@ -68,7 +68,7 @@ export function BookingModal({ open, onOpenChange, doctor, slots, slotsLoading, 
           <>
             <div className="px-8 py-6 bg-gradient-to-r from-emerald-50 via-white to-teal-50 dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 border-b border-slate-200 dark:border-slate-800 flex justify-between items-start">
               <div className="flex-1">
-                <span className="inline-flex items-center px-2 py-1 rounded-md bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-[10px] font-black uppercase tracking-widest mb-3">
+                <span className="inline-flex items-center px-2 py-1 rounded-md bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-[10px] font-semibold uppercase tracking-widest mb-3">
                   Book Appointment
                 </span>
                 <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
@@ -85,7 +85,7 @@ export function BookingModal({ open, onOpenChange, doctor, slots, slotsLoading, 
 
             <div className="p-8 space-y-6">
               <div>
-                <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest mb-4 flex items-center gap-2">
+                <h4 className="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-widest mb-4 flex items-center gap-2">
                   <Clock className="h-4 w-4 text-emerald-500" /> Available Time Slots
                 </h4>
 
@@ -105,8 +105,8 @@ export function BookingModal({ open, onOpenChange, doctor, slots, slotsLoading, 
                         disabled={loading}
                         onClick={() => setSelectedSlot(slot)}
                         className={`h-11 rounded-xl text-xs font-bold transition-all ${selectedSlot?.id === slot.id
-                            ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
-                            : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-emerald-400 dark:hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400"
+                          ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
+                          : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-emerald-400 dark:hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400"
                           }`}
                       >
                         {slot.startTime} – {slot.endTime}

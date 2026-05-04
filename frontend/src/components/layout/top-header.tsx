@@ -39,15 +39,7 @@ export function TopHeader({ userName, userRole }: { userName: string, userRole: 
         </div>
       </div>
 
-      {/* Global Search */}
-      <div className="flex-1 max-w-md hidden md:flex items-center relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
-        <Input
-          type="search"
-          placeholder="Search patients, doctors or appointments..."
-          className="w-full xl:w-[400px] h-10 bg-slate-50 hover:bg-slate-100 border-slate-200/60 pl-9 dark:bg-slate-800/50 dark:border-slate-700/60 text-sm focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500 shadow-inner transition-all rounded-full"
-        />
-      </div>
+
 
       <div className="ml-auto flex items-center gap-4">
         {/* User Profile / Logout Dropdown styled as a small Modal */}

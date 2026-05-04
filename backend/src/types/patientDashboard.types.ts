@@ -1,11 +1,21 @@
+// Matches PatientAppointment in appointment.types.ts exactly
 export interface PatientAppointmentDTO {
   id: string;
   patientId: string | null;
   patientName: string;
   doctorId: string | null;
-  doctorName: string;
-  timeSlot: string;
+  type: string;
+  time: string;
   status: string;
+  timeSlot: string | null;
+  notes: string | null;
+  createdAt: string;
+  price: number;
+  doctor?: {
+    name: string;
+    specialization: string;
+    image: string;
+  } | null;
 }
 
 export interface PatientDashboardStatsDTO {

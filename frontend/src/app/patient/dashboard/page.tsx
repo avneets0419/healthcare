@@ -5,9 +5,8 @@ import Link from "next/link";
 import AuthGuard from "@/components/shared/AuthGuard";
 import { SummaryCard } from "@/components/patient/SummaryCard";
 import { AppointmentCard } from "@/components/patient/AppointmentCard";
-import { Appointment } from "@/types/appointment.types";
+import { PatientAppointment } from "@/types/appointment.types";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   CalendarDays,
   FileText,
@@ -18,14 +17,12 @@ import {
   Loader2,
   CalendarCheck
 } from "lucide-react";
-import { cancelAppointment } from "@/services/appointment.service";
+import { patientAppointmentService } from "@/services/patient/patientAppointment.service";
 import { patientDashboardService, PatientDashboardStats } from "@/services/patient/dashboard.service";
-
-
 
 export default function PatientDashboardPage() {
   const [stats, setStats] = useState<PatientDashboardStats | null>(null);
-  const [upcoming, setUpcoming] = useState<Appointment[]>([]);
+  const [upcoming, setUpcoming] = useState<PatientAppointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,7 +31,7 @@ export default function PatientDashboardPage() {
       try {
         const data = await patientDashboardService.getDashboard();
         setStats(data.stats);
-        setUpcoming(data.upcomingAppointments as Appointment[]);
+        setUpcoming(data.upcomingAppointments as PatientAppointment[]);
       } catch (e) {
         console.error("Failed to fetch dashboard:", e);
         setError("Failed to load dashboard. Please try again.");
@@ -45,6 +42,15 @@ export default function PatientDashboardPage() {
 
     fetchDashboard();
   }, []);
+
+  const handleCancel = async (id: string) => {
+    try {
+      await patientAppointmentService.cancelAppointment(id);
+      setUpcoming((prev) => prev.filter((a) => a.id !== id));
+    } catch (err) {
+      console.error("Failed to cancel appointment:", err);
+    }
+  };
 
   if (loading) {
     return (
@@ -75,7 +81,7 @@ export default function PatientDashboardPage() {
         {/* 1. Page Header */}
         <div className="relative">
           <div className="absolute -left-4 -top-4 w-16 h-16 bg-blue-400/10 rounded-full blur-2xl pointer-events-none" />
-          <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white relative z-10">
+          <h1 className="text-4xl font-semibold tracking-tight text-slate-900 dark:text-white relative z-10">
             Patient Dashboard
           </h1>
           <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-widest relative z-10">
@@ -122,7 +128,7 @@ export default function PatientDashboardPage() {
             <div className="bg-white dark:bg-slate-900/50 rounded-3xl p-6 md:p-8 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
               <div className="flex items-center justify-between mb-6 relative z-10">
                 <div>
-                  <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                  <h2 className="text-xl font-semibold text-slate-900 dark:text-white uppercase tracking-tight">
                     Upcoming Appointments
                   </h2>
                   <p className="text-xs text-slate-500 uppercase tracking-widest mt-1">Your next scheduled visits</p>
@@ -146,10 +152,7 @@ export default function PatientDashboardPage() {
                       <AppointmentCard
                         key={appt.id}
                         appointment={appt}
-                        onCancel={async (id) => {
-                          await cancelAppointment(id);
-                          setUpcoming((prev) => prev.filter(a => a.id !== id));
-                        }}
+                        onCancel={handleCancel}
                       />
                     ))}
                   </div>
@@ -162,7 +165,7 @@ export default function PatientDashboardPage() {
           <div className="space-y-8">
             {/* 4. Quick Actions */}
             <div className="bg-white dark:bg-slate-900/50 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
-              <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight mb-6">
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-white uppercase tracking-tight mb-6">
                 Quick Actions
               </h2>
               <div className="space-y-3 relative z-10">
@@ -176,16 +179,9 @@ export default function PatientDashboardPage() {
                     <Stethoscope className="mr-3 h-5 w-5 text-emerald-500" /> View Doctors
                   </Button>
                 </Link>
-                <Link href="/patient/history" className="block">
-                  <Button variant="outline" className="w-full h-12 rounded-xl border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 font-bold justify-start px-6 text-slate-700 dark:text-slate-300">
-                    <FileText className="mr-3 h-5 w-5 text-amber-500" /> Medical History
-                  </Button>
-                </Link>
+
               </div>
             </div>
-
-
-
           </div>
         </div>
       </div>

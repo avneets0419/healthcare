@@ -219,12 +219,12 @@ export function BookAppointmentModal({
               <CalendarIcon className="h-7 w-7" />
             </div>
             <div>
-              <DialogTitle className="text-2xl font-black text-white tracking-tight">
+              <DialogTitle className="text-2xl font-semibold text-white tracking-tight">
                 Book Appointment
               </DialogTitle>
               <div className="flex items-center gap-2 mt-0.5">
                 <span className="h-1 w-1 rounded-full bg-white/60 animate-pulse"></span>
-                <p className="text-[9px] font-black text-emerald-50/80 uppercase tracking-[0.25em]">
+                <p className="text-[9px] font-semibold text-emerald-50/80 uppercase tracking-[0.25em]">
                   Admin Scheduling Suite
                 </p>
               </div>
@@ -235,7 +235,7 @@ export function BookAppointmentModal({
         <form onSubmit={handleSubmit(onSubmit)} className="px-10 py-6 space-y-6 max-h-[80vh] overflow-y-auto custom-scrollbar">
           <div className="grid grid-cols-2 gap-x-8 gap-y-5">
             <div className="space-y-2 col-span-2">
-              <Label htmlFor="type" className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
+              <Label htmlFor="type" className="text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
                 <Briefcase className="h-2.5 w-2.5" /> Step 1: Specialization
               </Label>
               <Select onValueChange={(v: string | null) => {
@@ -256,7 +256,7 @@ export function BookAppointmentModal({
             </div>
 
             <div className="space-y-2 col-span-2">
-              <Label htmlFor="doctorId" className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
+              <Label htmlFor="doctorId" className="text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
                 <Stethoscope className="h-2.5 w-2.5" /> Step 2: Specialist
               </Label>
               <Select
@@ -279,7 +279,7 @@ export function BookAppointmentModal({
                         </div>
                         <div className="flex flex-col min-w-0">
                           <span className="font-bold text-slate-900 dark:text-slate-100 text-xs truncate">{d.name}</span>
-                          <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-black uppercase tracking-widest">{d.specialization}</span>
+                          <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-semibold uppercase tracking-widest">{d.specialization}</span>
                         </div>
                       </div>
                     </SelectItem>
@@ -290,13 +290,13 @@ export function BookAppointmentModal({
 
             <div className="col-span-2 py-1">
               <div className="flex items-center gap-4">
-                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-300 shrink-0">Patient Verification</span>
+                <span className="text-[9px] font-semibold uppercase tracking-[0.3em] text-slate-300 shrink-0">Patient Verification</span>
                 <div className="h-px w-full bg-slate-100 dark:bg-slate-800"></div>
               </div>
             </div>
 
             <div className="space-y-2 col-span-2 relative">
-              <Label htmlFor="patientSearch" className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
+              <Label htmlFor="patientSearch" className="text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
                 <User className="h-2.5 w-2.5" /> Step 3: Find Patient
               </Label>
               <div className="relative group">
@@ -329,7 +329,7 @@ export function BookAppointmentModal({
             </div>
 
             <div className="space-y-2 col-span-2 sm:col-span-1">
-              <Label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
+              <Label className="text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
                 <CalendarIcon className="h-2.5 w-2.5" /> Date
               </Label>
               <Input
@@ -340,7 +340,7 @@ export function BookAppointmentModal({
             </div>
 
             <div className="space-y-2 col-span-2 sm:col-span-1">
-              <Label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
+              <Label className="text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
                 <Clock className="h-2.5 w-2.5" /> Available Slots
               </Label>
               {fetchingSlots ? (
@@ -363,7 +363,7 @@ export function BookAppointmentModal({
                       key={slot.id}
                       type="button"
                       onClick={() => setValue("time", slot.startTime)}
-                      className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all border-2 ${selectedTime === slot.startTime ? "bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-500/20" : "bg-white border-slate-100 text-slate-600 hover:border-emerald-200"}`}
+                      className={`px-3 py-1.5 rounded-lg text-[10px] font-semibold transition-all border-2 ${selectedTime === slot.startTime ? "bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-500/20" : "bg-white border-slate-100 text-slate-600 hover:border-emerald-200"}`}
                     >
                       {slot.startTime}
                     </button>
@@ -374,23 +374,23 @@ export function BookAppointmentModal({
             </div>
 
             <div className="space-y-2 col-span-2 sm:col-span-1">
-              <Label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
+              <Label className="text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
                 <IndianRupee className="h-2.5 w-2.5" /> Fee
               </Label>
-              <Input type="number" className="h-12 rounded-2xl border-2 font-black text-emerald-600 text-sm px-4" {...register("price")} />
+              <Input type="number" className="h-12 rounded-2xl border-2 font-semibold text-emerald-600 text-sm px-4" {...register("price")} />
             </div>
 
             <div className="space-y-2 col-span-2 sm:col-span-1">
-              <Label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
-                 Clinical Notes
+              <Label className="text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
+                Clinical Notes
               </Label>
               <Input placeholder="Brief notes..." className="h-12 rounded-2xl border-2 font-semibold text-sm px-4" {...register("notes")} />
             </div>
           </div>
 
           <DialogFooter className="px-10 py-5 border-t border-emerald-100/50 flex items-center gap-4 bg-[#f8fcfb]/50">
-            <Button type="button" variant="ghost" onClick={onClose} className="h-12 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest text-slate-400">Cancel</Button>
-            <Button type="submit" disabled={loading} className="h-12 px-8 flex-1 rounded-2xl bg-emerald-600 text-white font-black text-xs uppercase tracking-widest shadow-xl">
+            <Button type="button" variant="ghost" onClick={onClose} className="h-12 px-6 rounded-xl font-semibold text-[10px] uppercase tracking-widest text-slate-400">Cancel</Button>
+            <Button type="submit" disabled={loading} className="h-12 px-8 flex-1 rounded-2xl bg-emerald-600 text-white font-semibold text-xs uppercase tracking-widest shadow-xl">
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Finalize Appointment"}
             </Button>
           </DialogFooter>

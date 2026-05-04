@@ -50,19 +50,13 @@ export class PatientBookingController {
         return;
       }
 
-      // JWT attaches { id, email, name, role } — we use email to find the Patient row
       const patientEmail: string | undefined = (req as any).user?.email;
       if (!patientEmail) {
         res.status(401).json({ error: "Unauthorized: patient identity missing" });
         return;
       }
 
-      const result = await this.service.bookAppointment({
-        doctorId,
-        slotId,
-        patientEmail,
-        notes,
-      });
+      const result = await this.service.bookAppointment({ doctorId, slotId, patientEmail, notes });
 
       res.status(201).json({
         message: "Appointment booked successfully",
@@ -77,7 +71,6 @@ export class PatientBookingController {
           : err.message === "Slot is no longer available"
           ? 409
           : 500;
-
       res.status(status).json({ error: err.message ?? "Failed to book appointment" });
     }
   };
@@ -89,11 +82,34 @@ export class PatientBookingController {
         res.status(401).json({ error: "Unauthorized" });
         return;
       }
-
       const appointments = await this.service.getMyAppointments(patientEmail);
       res.json(appointments);
     } catch (err: any) {
       res.status(500).json({ error: err.message ?? "Failed to fetch appointments" });
+    }
+  };
+
+  cancelAppointment = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id } = req.params;
+      const patientEmail: string | undefined = (req as any).user?.email;
+
+      if (!patientEmail) {
+        res.status(401).json({ error: "Unauthorized" });
+        return;
+      }
+
+      await this.service.cancelAppointment(id, patientEmail);
+      res.json({ message: "Appointment cancelled successfully" });
+    } catch (err: any) {
+      const status =
+        err.message === "Appointment not found" ||
+        err.message === "Unauthorized to cancel this appointment"
+          ? 404
+          : err.message === "Appointment cannot be cancelled"
+          ? 409
+          : 500;
+      res.status(status).json({ error: err.message ?? "Failed to cancel appointment" });
     }
   };
 }

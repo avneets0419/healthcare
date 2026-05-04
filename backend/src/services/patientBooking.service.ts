@@ -24,7 +24,7 @@ export interface SlotItem {
 export interface BookAppointmentPayload {
   doctorId: string;
   slotId: string;
-  patientEmail: string; // JWT gives us email — we resolve Patient.id internally
+  patientEmail: string;
   notes?: string;
 }
 
@@ -32,7 +32,7 @@ export interface BookingResult {
   appointment: Appointment;
 }
 
-// ─── Repository ───────────────────────────────────────────────────────────────
+// ─── Repository interface ─────────────────────────────────────────────────────
 
 export interface IPatientBookingRepository {
   findAllActiveDoctors(): Promise<DoctorListItem[]>;
@@ -40,6 +40,8 @@ export interface IPatientBookingRepository {
   findSlotById(slotId: string): Promise<AvailabilitySlot | null>;
   findPatientByEmail(email: string): Promise<{ id: string; name: string; email: string } | null>;
   findAppointmentsByPatientEmail(email: string): Promise<Appointment[]>;
+  findAppointmentById(id: string): Promise<Appointment | null>;
+  cancelAppointment(id: string): Promise<Appointment>;
   createAppointmentAndMarkSlot(
     payload: BookAppointmentPayload,
     patientId: string,
@@ -48,6 +50,8 @@ export interface IPatientBookingRepository {
     slot: AvailabilitySlot
   ): Promise<Appointment>;
 }
+
+// ─── Repository implementation ────────────────────────────────────────────────
 
 class PatientBookingRepository implements IPatientBookingRepository {
   private static instance: PatientBookingRepository;
@@ -134,6 +138,17 @@ class PatientBookingRepository implements IPatientBookingRepository {
     });
   }
 
+  async findAppointmentById(id: string): Promise<Appointment | null> {
+    return this.db.appointment.findUnique({ where: { id } });
+  }
+
+  async cancelAppointment(id: string): Promise<Appointment> {
+    return this.db.appointment.update({
+      where: { id },
+      data: { status: "cancelled" },
+    });
+  }
+
   async createAppointmentAndMarkSlot(
     payload: BookAppointmentPayload,
     patientId: string,
@@ -152,7 +167,7 @@ class PatientBookingRepository implements IPatientBookingRepository {
           timeSlot: new Date(`${slot.date}T${slot.startTime}:00`),
           notes: payload.notes ?? null,
           doctorId: payload.doctorId,
-          patientId, // resolved Patient.id, not User.id from JWT
+          patientId,
         },
       }),
       this.db.availabilitySlot.update({
@@ -165,14 +180,17 @@ class PatientBookingRepository implements IPatientBookingRepository {
   }
 }
 
-// ─── Service ──────────────────────────────────────────────────────────────────
+// ─── Service interface ────────────────────────────────────────────────────────
 
 export interface IPatientBookingService {
   getDoctors(): Promise<DoctorListItem[]>;
   getAvailableSlots(doctorId: string): Promise<SlotItem[]>;
   bookAppointment(payload: BookAppointmentPayload): Promise<BookingResult>;
   getMyAppointments(patientEmail: string): Promise<Appointment[]>;
+  cancelAppointment(id: string, patientEmail: string): Promise<void>;
 }
+
+// ─── Service implementation ───────────────────────────────────────────────────
 
 export class PatientBookingService implements IPatientBookingService {
   private static instance: PatientBookingService;
@@ -199,23 +217,19 @@ export class PatientBookingService implements IPatientBookingService {
   }
 
   async bookAppointment(payload: BookAppointmentPayload): Promise<BookingResult> {
-    // 1. Validate slot
     const slot = await this.repo.findSlotById(payload.slotId);
     if (!slot) throw new Error("Slot not found");
     if (slot.isBooked || slot.status !== "available") {
       throw new Error("Slot is no longer available");
     }
 
-    // 2. Resolve patient from email (JWT has email, Patient table has its own id)
     const patient = await this.repo.findPatientByEmail(payload.patientEmail);
     if (!patient) throw new Error("Patient not found");
 
-    // 3. Resolve doctor specialization
     const doctors = await this.repo.findAllActiveDoctors();
     const doctor = doctors.find((d) => d.id === payload.doctorId);
     if (!doctor) throw new Error("Doctor not found or inactive");
 
-    // 4. Persist — patient.id is the real Patient row id, not User.id
     const appointment = await this.repo.createAppointmentAndMarkSlot(
       payload,
       patient.id,
@@ -229,5 +243,24 @@ export class PatientBookingService implements IPatientBookingService {
 
   async getMyAppointments(patientEmail: string): Promise<Appointment[]> {
     return this.repo.findAppointmentsByPatientEmail(patientEmail);
+  }
+
+  async cancelAppointment(id: string, patientEmail: string): Promise<void> {
+    // 1. Appointment must exist
+    const appointment = await this.repo.findAppointmentById(id);
+    if (!appointment) throw new Error("Appointment not found");
+
+    // 2. Must belong to this patient
+    const patient = await this.repo.findPatientByEmail(patientEmail);
+    if (!patient || appointment.patientId !== patient.id) {
+      throw new Error("Unauthorized to cancel this appointment");
+    }
+
+    // 3. Can only cancel upcoming/active appointments
+    if (appointment.status === "completed" || appointment.status === "cancelled") {
+      throw new Error("Appointment cannot be cancelled");
+    }
+
+    await this.repo.cancelAppointment(id);
   }
 }

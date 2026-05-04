@@ -19,8 +19,8 @@ export function SummaryCard({ title, value, icon: Icon, colorClass, iconColorCla
           <Icon className={cn("h-6 w-6", iconColorClass)} />
         </div>
         <div>
-          <p className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-tight">{title}</p>
-          <h3 className="text-3xl font-black text-slate-900 dark:text-white mt-0.5 tracking-tighter">{value}</h3>
+          <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-tight">{title}</p>
+          <h3 className="text-3xl font-semibold text-slate-900 dark:text-white mt-0.5 tracking-tighter">{value}</h3>
         </div>
       </div>
     </div>

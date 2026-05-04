@@ -216,7 +216,7 @@ export default function AdminAppointmentsPage() {
                       )}
 
                       <div className="w-32 shrink-0 flex flex-col relative z-10">
-                        <span className={`text-[22px] font-black tracking-tight ${isLive ? "text-emerald-600 dark:text-emerald-400" : "text-slate-800 dark:text-slate-100"}`}>{apt.time}</span>
+                        <span className={`text-[22px] font-semibold tracking-tight ${isLive ? "text-emerald-600 dark:text-emerald-400" : "text-slate-800 dark:text-slate-100"}`}>{apt.time}</span>
                         {apt.dateStr && <span className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-wider">{apt.dateStr}</span>}
                         {isLive && (
                           <span className="mt-2 inline-flex items-center gap-1.5 text-[10px] uppercase tracking-widest font-bold text-emerald-600 bg-emerald-100 dark:bg-emerald-500/20 py-1 px-2 rounded-md w-max animate-pulse">

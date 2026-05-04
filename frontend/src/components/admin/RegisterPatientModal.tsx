@@ -138,7 +138,7 @@ export function RegisterPatientModal({
             <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-md">
               <UserPlus className="h-6 w-6 text-white" />
             </div>
-            <DialogTitle className="text-3xl font-black tracking-tight">
+            <DialogTitle className="text-3xl font-semibold tracking-tight">
               {patient ? "Edit Patient Details" : "Register New Patient"}
             </DialogTitle>
           </div>
@@ -231,7 +231,7 @@ export function RegisterPatientModal({
 
               <div className="space-y-2 col-span-2 sm:col-span-1">
                 <Label htmlFor="gender">Gender</Label>
-                <Select 
+                <Select
                   value={watch("gender")}
                   onValueChange={(v: string | null) => setValue("gender", v || undefined)}
                 >
@@ -266,7 +266,7 @@ export function RegisterPatientModal({
 
               <div className="space-y-2 col-span-2 sm:col-span-1">
                 <Label htmlFor="department">Department</Label>
-                <Select 
+                <Select
                   value={watch("department")}
                   onValueChange={(v: string | null) => setValue("department", v || undefined)}
                 >

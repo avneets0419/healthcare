@@ -139,6 +139,8 @@
 
   body {
     @apply bg-background text-foreground bg-[#f8fafc] dark:bg-[#0f172a] font-sans;
+    font-synthesis: none;
+
   }
 
   html {

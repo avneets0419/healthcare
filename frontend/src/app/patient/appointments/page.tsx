@@ -1,59 +1,14 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { cancelAppointment } from "@/services/appointment.service";
-import api from "@/lib/axios";
-import { Appointment } from "@/types/appointment.types";
+import { patientAppointmentService, PatientAppointment } from "@/services/patient/patientAppointment.service";
 import { AppointmentCard } from "@/components/patient/AppointmentCard";
 import { Button } from "@/components/ui/button";
-import {
-  CalendarDays,
-  Loader2,
-  Plus
-} from "lucide-react";
+import { CalendarDays, Loader2, Plus } from "lucide-react";
 import Link from "next/link";
 
-const MOCK_APPOINTMENTS: Appointment[] = [
-  {
-    id: "appt-1",
-    patientId: "patient-1",
-    patientName: "John Doe",
-    doctorId: "doc-1",
-    doctorName: "Dr. Sarah Smith",
-    timeSlot: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(), // Tomorrow
-    status: "confirmed",
-  },
-  {
-    id: "appt-2",
-    patientId: "patient-1",
-    patientName: "John Doe",
-    doctorId: "doc-2",
-    doctorName: "Dr. Emily Chen",
-    timeSlot: new Date(Date.now() + 1000 * 60 * 60 * 24 * 3).toISOString(), // In 3 days
-    status: "pending",
-  },
-  {
-    id: "appt-3",
-    patientId: "patient-1",
-    patientName: "John Doe",
-    doctorId: "doc-3",
-    doctorName: "Dr. Michael Brown",
-    timeSlot: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString(), // 5 days ago
-    status: "completed",
-  },
-  {
-    id: "appt-4",
-    patientId: "patient-1",
-    patientName: "John Doe",
-    doctorId: "doc-4",
-    doctorName: "Dr. Jessica Wilson",
-    timeSlot: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10).toISOString(), // 10 days ago
-    status: "cancelled",
-  }
-];
-
 export default function AppointmentsPage() {
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [appointments, setAppointments] = useState<PatientAppointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<"all" | "upcoming" | "completed">("all");
@@ -61,15 +16,11 @@ export default function AppointmentsPage() {
   const fetchAppointments = useCallback(async () => {
     setLoading(true);
     try {
-      const { data } = await api.get<Appointment[]>("/appointments");
-      if (data && data.length > 0) {
-        setAppointments(data);
-      } else {
-        setAppointments(MOCK_APPOINTMENTS);
-      }
-    } catch {
-      // Graceful fallback to mock data
-      setAppointments(MOCK_APPOINTMENTS);
+      const data = await patientAppointmentService.getMyAppointments();
+      setAppointments(data);
+    } catch (err) {
+      console.error("Failed to fetch appointments:", err);
+      setAppointments([]);
     } finally {
       setLoading(false);
     }
@@ -82,17 +33,12 @@ export default function AppointmentsPage() {
   const handleCancel = async (id: string) => {
     setCancelling(id);
     try {
-      await cancelAppointment(id);
+      await patientAppointmentService.cancelAppointment(id);
       setAppointments((prev) =>
         prev.map((a) => (a.id === id ? { ...a, status: "cancelled" } : a))
       );
-      alert("Appointment cancelled");
-    } catch {
-      // Optimistic update
-      setAppointments((prev) =>
-        prev.map((a) => (a.id === id ? { ...a, status: "cancelled" } : a))
-      );
-      alert("Appointment cancelled");
+    } catch (err) {
+      console.error("Failed to cancel appointment:", err);
     } finally {
       setCancelling(null);
     }
@@ -100,7 +46,7 @@ export default function AppointmentsPage() {
 
   const filtered = appointments.filter((a) => {
     if (activeFilter === "all") return true;
-    if (activeFilter === "upcoming") return a.status === "confirmed" || a.status === "pending";
+    if (activeFilter === "upcoming") return a.status === "upcoming" || a.status === "active";
     if (activeFilter === "completed") return a.status === "completed";
     return true;
   });
@@ -111,7 +57,7 @@ export default function AppointmentsPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="relative">
           <div className="absolute -left-4 -top-4 w-16 h-16 bg-blue-400/10 rounded-full blur-2xl pointer-events-none" />
-          <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white relative z-10">
+          <h1 className="text-4xl font-semibold tracking-tight text-slate-900 dark:text-white relative z-10">
             My Appointments
           </h1>
           <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-widest relative z-10">
@@ -121,9 +67,7 @@ export default function AppointmentsPage() {
 
         <div className="flex items-center gap-3">
           <Link href="/patient/doctors">
-            <Button
-              className="h-11 px-6 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-600/20 transition-all active:scale-95 flex items-center gap-2"
-            >
+            <Button className="h-11 px-6 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-600/20 transition-all active:scale-95 flex items-center gap-2">
               <Plus className="h-4 w-4" />
               Book Appointment
             </Button>
@@ -131,7 +75,7 @@ export default function AppointmentsPage() {
         </div>
       </div>
 
-      {/* 2. Tabs Section */}
+      {/* 2. Filter Tabs */}
       <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
         {[
           { label: "All", value: "all" },
@@ -141,11 +85,10 @@ export default function AppointmentsPage() {
           <button
             key={f.value}
             onClick={() => setActiveFilter(f.value as "all" | "upcoming" | "completed")}
-            className={`whitespace-nowrap px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-widest transition-all duration-300 border ${
-              activeFilter === f.value
-                ? "bg-slate-900 text-white border-slate-900 shadow-lg shadow-slate-900/20 dark:bg-white dark:text-slate-900 dark:border-white"
-                : "bg-white text-slate-500 border-slate-200 hover:border-slate-300 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800"
-            }`}
+            className={`whitespace-nowrap px-6 py-2.5 rounded-full text-xs font-semibold uppercase tracking-widest transition-all duration-300 border ${activeFilter === f.value
+              ? "bg-slate-900 text-white border-slate-900 shadow-lg shadow-slate-900/20 dark:bg-white dark:text-slate-900 dark:border-white"
+              : "bg-white text-slate-500 border-slate-200 hover:border-slate-300 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800"
+              }`}
           >
             {f.label}
           </button>
@@ -167,7 +110,7 @@ export default function AppointmentsPage() {
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800">
             <CalendarDays className="h-16 w-16 text-slate-200 dark:text-slate-800 mb-4" />
-            <p className="text-slate-500 dark:text-slate-400 font-black uppercase tracking-widest">No appointments found</p>
+            <p className="text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-widest">No appointments found</p>
           </div>
         ) : (
           filtered.map((appt) => (
